@@ -34,7 +34,8 @@ dependencies {
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "252.*"
+            sinceBuild = "252"
+            // untilBuild is intentionally left unset to allow all future 252.x builds
         }
 
         changeNotes = """

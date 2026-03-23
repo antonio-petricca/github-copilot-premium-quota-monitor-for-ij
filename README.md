@@ -35,7 +35,7 @@ the current billing period.
 
 | Requirement | Version |
 |---|---|
-| IntelliJ IDEA **Ultimate** | 2025.2 or later |
+| IntelliJ IDEA **Ultimate** | 2025.2 (build 252) or later |
 | [GitHub Copilot plugin][gh:copilot-plugin] | any recent version |
 | GitHub account signed in through the Copilot plugin | — |
 
