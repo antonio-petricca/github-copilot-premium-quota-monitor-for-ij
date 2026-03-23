@@ -1,117 +1,202 @@
-# IntelliJ Platform Plugin Template
+# GitHub Copilot Premium Quota Monitor
 
-[![Twitter Follow](https://img.shields.io/badge/follow-%40JBPlatform-1DA1F2?logo=twitter)](https://twitter.com/JBPlatform)
-[![Developers Forum](https://img.shields.io/badge/JetBrains%20Platform-Join-blue)][jb:forum]
+An IntelliJ IDEA plugin that displays your remaining **GitHub Copilot premium AI-model quota**
+directly in the IDE status bar, so you always know how many premium requests you have left for
+the current billing period.
 
-## Plugin template structure
+---
 
-A generated project contains the following content structure:
+## Table of Contents
+
+1. [Features](#features)
+2. [Requirements](#requirements)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Authentication](#authentication)
+6. [Status Bar States](#status-bar-states)
+7. [Building from Source](#building-from-source)
+8. [Architecture](#architecture)
+
+---
+
+## Features
+
+- **Status bar widget** — shows remaining/total premium requests at a glance (e.g. `⊙ 150/300`).
+- **Auto-refresh** — quota is fetched in the background every **5 minutes**.
+- **On-demand refresh** — click the widget to force an immediate update.
+- **Tooltip** — hover the widget to see used, remaining, total, and percentage consumed.
+- **Graceful error handling** — distinct visual states for loading, unlimited plans, missing
+  account, and network errors.
+- **Zero extra authentication** — fully delegates sign-in to the official GitHub Copilot plugin.
+
+---
+
+## Requirements
+
+| Requirement | Version |
+|---|---|
+| IntelliJ IDEA **Ultimate** | 2025.2 or later |
+| [GitHub Copilot plugin][gh:copilot-plugin] | any recent version |
+| GitHub account signed in through the Copilot plugin | — |
+
+> [!IMPORTANT]
+> The **GitHub Copilot** plugin (`com.github.copilot`) is a **mandatory dependency**.  
+> If it is not installed or is disabled, IntelliJ will refuse to load this plugin and will display
+> a clear error message asking you to install it first.
+
+---
+
+## Installation
+
+### From a built ZIP (recommended for local use)
+
+1. Build the plugin (see [Building from Source](#building-from-source)).
+2. In IntelliJ IDEA, open **Settings → Plugins → ⚙ → Install Plugin from Disk…**
+3. Select the `.zip` file generated under `build/distributions/`.
+4. Restart the IDE.
+
+### From JetBrains Marketplace *(when published)*
+
+Search for **"GitHub Copilot Premium Quota Monitor"** in **Settings → Plugins → Marketplace**.
+
+---
+
+## Usage
+
+After installation and IDE restart the widget appears automatically in the **status bar**
+at the bottom of every project window.
 
 ```
-.
-├── .run/                   Predefined Run/Debug Configurations
-├── build/                  Output build directory
-├── gradle
-│   ├── wrapper/            Gradle Wrapper
-├── src                     Plugin sources
-│   ├── main
-│   │   ├── kotlin/         Kotlin production sources
-│   │   └── resources/      Resources - plugin.xml, icons, messages
-├── .gitignore              Git ignoring rules
-├── build.gradle.kts        Gradle build configuration
-├── gradle.properties       Gradle configuration properties
-├── gradlew                 *nix Gradle Wrapper script
-├── gradlew.bat             Windows Gradle Wrapper script
-├── README.md               README
-└── settings.gradle.kts     Gradle project settings
+⊙ 150/300
 ```
 
-In addition to the configuration files, the most crucial part is the `src` directory, which contains our implementation
-and the manifest for our plugin – [plugin.xml][file:plugin.xml].
+- The **left number** is the remaining premium requests for the current month.
+- The **right number** is the monthly limit for your plan.
+
+### Tooltip
+
+Hover over the widget to see a full breakdown:
+
+```
+GitHub Copilot — Premium quota
+  Remaining : 150 / 300
+  Used      : 150  (50.0 %)
+  Click to refresh
+```
+
+### Refresh
+
+| Action | Behaviour |
+|---|---|
+| Automatic | Background refresh every **5 minutes** |
+| Manual | **Click** the widget to trigger an immediate fetch |
+
+### Enabling / Disabling the widget
+
+The widget can be toggled via the status bar context menu:  
+**Right-click the status bar → GitHub Copilot Premium Quota**.
+
+---
+
+## Authentication
+
+This plugin does **not** implement its own authentication flow.
+
+When the quota is fetched, the plugin:
+
+1. Reads the GitHub OAuth token stored by IntelliJ's built-in **GitHub account manager**
+   (`GHAccountManager`, provided by the bundled `org.jetbrains.plugins.github` plugin).
+   This is the same token registered when you sign in through the official GitHub Copilot plugin.
+2. Calls `GET https://api.github.com/copilot_internal/user` with that token — the same
+   internal endpoint used by the Copilot plugin itself.
+3. Parses the response for premium quota fields and caches the result for 5 minutes.
 
 > [!NOTE]
-> To use Java in your plugin, create the `/src/main/java` directory.
+> If you are signed into multiple GitHub accounts, the token of the **first** account returned
+> by the account manager is used. Future versions may add account selection.
 
-## Plugin configuration file
+---
 
-The plugin configuration file is a [plugin.xml][file:plugin.xml] file located in the `src/main/resources/META-INF`
-directory.
-It provides general information about the plugin, its dependencies, extensions, and listeners.
+## Status Bar States
 
-You can read more about this file in the [Plugin Configuration File][docs:plugin.xml] section of our documentation.
+| Widget label | Meaning |
+|---|---|
+| `⊙ Copilot` | Initial load in progress |
+| `⊙ 150/300` | Quota data retrieved — *remaining* / *total* |
+| `⊙ Copilot ∞` | Your plan has no premium request limit |
+| `⊙ Copilot ⚠` | No GitHub account found, or token is invalid |
+| `⊙ Copilot ✗` | Network error or unexpected API response |
 
-If you're still not quite sure what this is all about, read our
-introduction: [What is the IntelliJ Platform?][docs:intro]
+All error details are available in the tooltip and in the IDE log
+(`Help → Show Log in Explorer/Finder`).
 
-$H$H Predefined Run/Debug configurations
+---
 
-Within the default project structure, there is a `.run` directory provided containing predefined *Run/Debug
-configurations* that expose corresponding Gradle tasks:
+## Building from Source
 
-| Configuration name | Description                                                                                                                                                                         |
-|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Run Plugin         | Runs [`:runIde`][gh:intellij-platform-gradle-plugin-runIde] IntelliJ Platform Gradle Plugin task. Use the *Debug* icon for plugin debugging.                                        |
-| Run Tests          | Runs [`:test`][gradle:lifecycle-tasks] Gradle task.                                                                                                                                 |
-| Run Verifications  | Runs [`:verifyPlugin`][gh:intellij-platform-gradle-plugin-verifyPlugin] IntelliJ Platform Gradle Plugin task to check the plugin compatibility against the specified IntelliJ IDEs. |
+### Prerequisites
 
-> [!NOTE]
-> You can find the logs from the running task in the `idea.log` tab.
+- JDK 21+
+- Internet access (to download Gradle dependencies and the IntelliJ SDK on first run)
 
-## Publishing the plugin
+### Steps
 
-> [!TIP]
-> Make sure to follow all guidelines listed in [Publishing a Plugin][docs:publishing] to follow all recommended and
-> required steps.
+```bash
+# Clone the repository
+git clone https://github.com/<your-org>/github-copilot-premium-quota-monitor-for-ij.git
+cd github-copilot-premium-quota-monitor-for-ij
 
-Releasing a plugin to [JetBrains Marketplace](https://plugins.jetbrains.com) is a straightforward operation that uses
-the `publishPlugin` Gradle task provided by
-the [intellij-platform-gradle-plugin][gh:intellij-platform-gradle-plugin-docs].
+# Build and package the plugin
+./gradlew buildPlugin
+```
 
-You can also upload the plugin to the [JetBrains Plugin Repository](https://plugins.jetbrains.com/plugin/upload)
-manually via UI.
+The distributable ZIP is created at:
 
-## Useful links
+```
+build/distributions/github-copilot-premium-quota-monitor-for-ij-<version>.zip
+```
 
-- [IntelliJ Platform SDK Plugin SDK][docs]
-- [IntelliJ Platform Gradle Plugin Documentation][gh:intellij-platform-gradle-plugin-docs]
-- [IntelliJ Platform Explorer][jb:ipe]
-- [JetBrains Marketplace Quality Guidelines][jb:quality-guidelines]
-- [IntelliJ Platform UI Guidelines][jb:ui-guidelines]
-- [JetBrains Marketplace Paid Plugins][jb:paid-plugins]
-- [IntelliJ SDK Code Samples][gh:code-samples]
+### Run in a sandboxed IDE
 
-[docs]: https://plugins.jetbrains.com/docs/intellij
+```bash
+./gradlew runIde
+```
 
-[docs:intro]: https://plugins.jetbrains.com/docs/intellij/intellij-platform.html?from=IJPluginTemplate
+This launches a fresh IntelliJ IDEA instance with the plugin pre-installed. You will need to
+install and sign in to the GitHub Copilot plugin inside that sandbox instance to test the full
+flow.
 
-[docs:plugin.xml]: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html?from=IJPluginTemplate
+### Other useful tasks
 
-[docs:publishing]: https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate
+| Task | Description |
+|---|---|
+| `./gradlew compileKotlin` | Compile Kotlin sources only |
+| `./gradlew test` | Run unit tests |
+| `./gradlew verifyPlugin` | Check plugin compatibility |
 
-[file:plugin.xml]: ./src/main/resources/META-INF/plugin.xml
+---
 
-[gh:code-samples]: https://github.com/JetBrains/intellij-sdk-code-samples
+## Architecture
 
-[gh:intellij-platform-gradle-plugin]: https://github.com/JetBrains/intellij-platform-gradle-plugin
+```
+src/main/kotlin/com/github/intellij/plugins/github_copilot_quota_monitor/
+├── services/
+│   └── CopilotQuotaService.kt          # Application-level service
+│                                        # Fetches quota, manages cache,
+│                                        # resolves GitHub OAuth token
+└── statusbar/
+    ├── CopilotQuotaStatusBarWidget.kt   # Status bar widget (text + tooltip + click)
+    └── CopilotQuotaStatusBarWidgetFactory.kt  # Factory registered in plugin.xml
+```
 
-[gh:intellij-platform-gradle-plugin-docs]: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
+### Key design decisions
 
-[gh:intellij-platform-gradle-plugin-runIde]: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-tasks.html#runIde
+| Decision | Rationale |
+|---|---|
+| `com.github.copilot` as hard `<depends>` | Guarantees the Copilot plugin is present; IntelliJ handles the error message automatically if it is missing |
+| `org.jetbrains.plugins.github` for token retrieval | Stable, public IntelliJ API; avoids fragile reflection into Copilot plugin internals |
+| Application-scoped service | Quota data is IDE-wide, not per-project; avoids duplicate network calls |
+| 5-minute cache with atomic references | Thread-safe, prevents API rate-limiting, no background threads kept alive permanently |
+| Flexible JSON parser | Handles multiple field-name variants across GitHub API versions without breaking |
 
-[gh:intellij-platform-gradle-plugin-verifyPlugin]: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-tasks.html#verifyPlugin
-
-[gradle:lifecycle-tasks]: https://docs.gradle.org/current/userguide/java_plugin.html#lifecycle_tasks
-
-[jb:github]: https://github.com/JetBrains/.github/blob/main/profile/README.md
-
-[jb:forum]: https://platform.jetbrains.com/
-
-[jb:quality-guidelines]: https://plugins.jetbrains.com/docs/marketplace/quality-guidelines.html
-
-[jb:paid-plugins]: https://plugins.jetbrains.com/docs/marketplace/paid-plugins-marketplace.html
-
-[jb:quality-guidelines]: https://plugins.jetbrains.com/docs/marketplace/quality-guidelines.html
-
-[jb:ipe]: https://jb.gg/ipe
-
-[jb:ui-guidelines]: https://jetbrains.github.io/ui
+[gh:copilot-plugin]: https://plugins.jetbrains.com/plugin/17718-github-copilot
