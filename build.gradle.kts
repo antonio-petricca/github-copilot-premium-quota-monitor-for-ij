@@ -46,6 +46,10 @@ tasks {
         sourceCompatibility = "21"
         targetCompatibility = "21"
     }
+
+    // instrumentCode uses JBR-specific "Packages" directory not present in standard JDKs
+    named("instrumentCode") { enabled = false }
+    named("instrumentTestCode") { enabled = false }
 }
 
 kotlin {
