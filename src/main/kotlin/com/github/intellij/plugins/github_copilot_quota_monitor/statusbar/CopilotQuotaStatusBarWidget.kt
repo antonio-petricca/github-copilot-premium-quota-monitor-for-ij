@@ -77,7 +77,8 @@ class CopilotQuotaStatusBarWidget(
             "GitHub Copilot — Premium quota: unlimited for your plan"
 
         is CopilotQuotaService.QuotaResult.NoAccount ->
-            "GitHub Copilot — ⚠ ${r.message}"
+            "GitHub Copilot — ⚠ Not signed in.\n" +
+            "  Open Settings → Tools → GitHub Copilot Quota Monitor to sign in."
 
         is CopilotQuotaService.QuotaResult.Error ->
             "GitHub Copilot — ✗ Error: ${r.message}"

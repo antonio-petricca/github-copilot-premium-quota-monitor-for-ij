@@ -5,10 +5,8 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import kotlinx.coroutines.runBlocking
-import org.jetbrains.plugins.github.authentication.accounts.GHAccountManager
 import java.net.HttpURLConnection
-import java.net.URL
+import java.net.URI
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
@@ -16,8 +14,8 @@ import java.util.concurrent.atomic.AtomicReference
  * Application-level service responsible for fetching and caching
  * the GitHub Copilot premium quota from the GitHub API.
  *
- * Authentication is fully delegated to the official GitHub Copilot plugin
- * via IntelliJ's GitHub account manager (org.jetbrains.plugins.github).
+ * Authentication is handled by [GitHubAuthService] via OAuth Device Flow.
+ * No dependency on the GitHub Copilot plugin or org.jetbrains.plugins.github.
  */
 @Service(Service.Level.APP)
 class CopilotQuotaService {
@@ -30,7 +28,6 @@ class CopilotQuotaService {
 
         /**
          * GitHub Copilot internal API endpoint that returns user plan/quota data.
-         * This is the same endpoint used by the official Copilot plugin.
          */
         private const val COPILOT_USER_API_URL = "https://api.github.com/copilot_internal/user"
 
@@ -59,18 +56,18 @@ class CopilotQuotaService {
         /** The user's plan has no premium quota limit (unlimited). */
         object Unlimited : QuotaResult()
 
-        /** No GitHub account found or token is invalid. */
+        /** No GitHub account found or token is invalid/missing. */
         data class NoAccount(val message: String) : QuotaResult()
 
         /** An unexpected error occurred. */
         data class Error(val message: String) : QuotaResult()
     }
 
-    // ── State ────────────────────────────────────────────���────────────────────
+    // ── State ─────────────────────────────────────────────────────────────────
 
     private val cachedResultRef = AtomicReference<QuotaResult>(QuotaResult.Loading)
-    private val lastFetchTime = AtomicLong(0L)
-    private val isFetching = AtomicReference(false)
+    private val lastFetchTime   = AtomicLong(0L)
+    private val isFetching      = AtomicReference(false)
 
     val cachedResult: QuotaResult get() = cachedResultRef.get()
 
@@ -102,24 +99,32 @@ class CopilotQuotaService {
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private fun fetchQuota(): QuotaResult {
-        val token = resolveGitHubToken()
+        val token = GitHubAuthService.getInstance().getToken()
             ?: return QuotaResult.NoAccount(
-                "No GitHub account found. Please sign in via the GitHub Copilot plugin."
+                "Not signed in. Open Settings → Tools → GitHub Copilot Quota Monitor to sign in."
             )
 
         return try {
-            val conn = (URL(COPILOT_USER_API_URL).openConnection() as HttpURLConnection).apply {
+            val conn = (URI.create(COPILOT_USER_API_URL).toURL().openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
-                setRequestProperty("Authorization", "token $token")
-                setRequestProperty("Accept", "application/json")
-                setRequestProperty("User-Agent", "github-copilot-quota-monitor-ij/1.0")
+                setRequestProperty("Authorization",          "token $token")
+                setRequestProperty("Accept",                 "application/json")
+                setRequestProperty("User-Agent",             "github-copilot-quota-monitor-ij/1.0")
+                setRequestProperty("Copilot-Integration-Id", "JetBrainsIDE")
                 connectTimeout = 10_000
-                readTimeout = 10_000
+                readTimeout    = 10_000
             }
 
             when (val code = conn.responseCode) {
                 200 -> parseQuota(conn.inputStream.bufferedReader().readText())
-                401, 403 -> QuotaResult.NoAccount("GitHub token is invalid or lacks Copilot access (HTTP $code).")
+                401, 403 -> {
+                    // Token is invalid or revoked — clear it so the user knows to re-authenticate
+                    GitHubAuthService.getInstance().clearAuthentication()
+                    QuotaResult.NoAccount(
+                        "GitHub token is invalid or expired (HTTP $code). " +
+                        "Open Settings → Tools → GitHub Copilot Quota Monitor to sign in again."
+                    )
+                }
                 else -> QuotaResult.Error("GitHub API returned HTTP $code.")
             }
         } catch (e: Exception) {
@@ -129,53 +134,66 @@ class CopilotQuotaService {
     }
 
     /**
-     * Retrieves the GitHub OAuth token from IntelliJ's GitHub account manager,
-     * which is populated when the user authenticates through the GitHub Copilot
-     * plugin or any other GitHub integration in the IDE.
-     */
-    private fun resolveGitHubToken(): String? {
-        return try {
-            val accountManager = service<GHAccountManager>()
-            val account = accountManager.accountsState.value.firstOrNull() ?: return null
-            runBlocking { accountManager.findCredentials(account) }
-        } catch (e: Exception) {
-            LOG.warn("Failed to obtain GitHub token from account manager", e)
-            null
-        }
-    }
-
-    /**
      * Parses the JSON response from the Copilot user API.
-     * Supports several field-name variants that GitHub may use across API versions.
+     *
+     * Handles several field-name layouts used across GitHub API versions:
+     *
+     * Layout A — limited_user_quotas (current):
+     * ```json
+     * { "limited_user_quotas": { "premium_interactions": { "used": 50, "limit": 300 } } }
+     * ```
+     *
+     * Layout B — nested quota object:
+     * ```json
+     * { "quota": { "premium_requests": { "used": 50, "remaining": 250, "monthly_maximum": 300 } } }
+     * ```
+     *
+     * Layout C — flat fields:
+     * ```json
+     * { "premium_requests_maximum": 300, "premium_requests_used": 50 }
+     * ```
      */
     private fun parseQuota(json: String): QuotaResult {
         return try {
             val root = JsonParser.parseString(json).asJsonObject
 
-            // Nested quota objects (v1 or v2 formats)
+            // ── Layout A: limited_user_quotas (current GitHub API format) ────
+            val limitedQuotas = root.getAsJsonObject("limited_user_quotas")
+            if (limitedQuotas != null) {
+                val interactions = limitedQuotas.getAsJsonObject("premium_interactions")
+                    ?: limitedQuotas.getAsJsonObject("completions")
+                if (interactions != null) {
+                    val limit = interactions["limit"]?.asInt ?: interactions["monthly_maximum"]?.asInt
+                    if (limit != null) {
+                        val used      = interactions["used"]?.asInt ?: 0
+                        val remaining = interactions["remaining"]?.asInt ?: (limit - used)
+                        return QuotaResult.Available(QuotaInfo(used = used, remaining = remaining, total = limit))
+                    }
+                }
+            }
+
+            // ── Layout B: nested quota / premium_interactions / premium_requests ──
             val quotaObj = root.getAsJsonObject("quota")
                 ?: root.getAsJsonObject("premium_interactions")
                 ?: root.getAsJsonObject("premium_requests")
-
             if (quotaObj != null) {
-                val total = quotaObj.get("monthly_maximum")?.asInt
-                    ?: quotaObj.get("maximum")?.asInt
-                    ?: quotaObj.get("total")?.asInt
-                    ?: quotaObj.get("limit")?.asInt
-
+                val total = quotaObj["monthly_maximum"]?.asInt
+                    ?: quotaObj["maximum"]?.asInt
+                    ?: quotaObj["total"]?.asInt
+                    ?: quotaObj["limit"]?.asInt
                 if (total != null) {
-                    val used = quotaObj.get("used")?.asInt ?: 0
-                    val remaining = quotaObj.get("remaining")?.asInt ?: (total - used)
+                    val used      = quotaObj["used"]?.asInt ?: 0
+                    val remaining = quotaObj["remaining"]?.asInt ?: (total - used)
                     return QuotaResult.Available(QuotaInfo(used = used, remaining = remaining, total = total))
                 }
             }
 
-            // Flat fields (alternative format)
-            val maxFlat = root.get("premium_requests_maximum")?.asInt
-                ?: root.get("monthly_maximum_premium_requests")?.asInt
-                ?: root.get("premium_requests_monthly_limit")?.asInt
+            // ── Layout C: flat fields ────────────────────────────────────────
+            val maxFlat = root["premium_requests_maximum"]?.asInt
+                ?: root["monthly_maximum_premium_requests"]?.asInt
+                ?: root["premium_requests_monthly_limit"]?.asInt
             if (maxFlat != null) {
-                val used = root.get("premium_requests_used")?.asInt ?: 0
+                val used = root["premium_requests_used"]?.asInt ?: 0
                 return QuotaResult.Available(QuotaInfo(used = used, remaining = maxFlat - used, total = maxFlat))
             }
 

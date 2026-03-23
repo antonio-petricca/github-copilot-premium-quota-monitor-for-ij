@@ -16,33 +16,32 @@
         Displays the remaining <b>GitHub Copilot premium AI-model quota</b> directly in the IDE status bar.<br/>
         The widget refreshes automatically every 5 minutes and on click.<br/>
         <br/>
+        <b>First-time setup</b><br/>
+        Open <em>Settings → Tools → GitHub Copilot Quota Monitor</em> and click
+        <em>Sign in with GitHub</em> to authorize the plugin via the standard GitHub
+        OAuth Device Flow (RFC 8628). No external plugin is required.<br/>
+        <br/>
         <b>Requirements</b><br/>
         <ul>
-            <li>The official <em>GitHub Copilot</em> plugin must be installed and activated.</li>
-            <li>You must be signed in to GitHub through the Copilot plugin.</li>
+            <li>IntelliJ IDEA Community or Ultimate 2025.2 (build 252) or later.</li>
+            <li>A GitHub account with an active Copilot subscription.</li>
         </ul>
     ]]></description>
 
-    <!--
-        Hard dependency on the official GitHub Copilot plugin.
-        IntelliJ will refuse to load this plugin (and show a clear error to the user)
-        if com.github.copilot is not installed or disabled.
-    -->
+    <!-- Only the IntelliJ Platform base module is required.
+         This makes the plugin compatible with all IntelliJ-based IDEs
+         (IDEA Community, IDEA Ultimate, PyCharm, WebStorm, GoLand, …). -->
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.github.copilot</depends>
-
-    <!--
-        The bundled GitHub integration plugin provides GHAccountManager,
-        which exposes the OAuth token that the Copilot plugin registered.
-        Available in IntelliJ IDEA Ultimate out of the box.
-    -->
-    <depends>org.jetbrains.plugins.github</depends>
 
     <!-- Extensions defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
 
-        <!-- Application-scoped service: fetches and caches quota data -->
+        <!-- Authentication service: OAuth Device Flow + PasswordSafe token store -->
+        <applicationService
+            serviceImplementation="com.github.intellij.plugins.github_copilot_quota_monitor.services.GitHubAuthService"/>
+
+        <!-- Quota service: fetches and caches quota data -->
         <applicationService
             serviceImplementation="com.github.intellij.plugins.github_copilot_quota_monitor.services.CopilotQuotaService"/>
 
@@ -51,6 +50,13 @@
             id="GitHubCopilotQuotaWidget"
             implementation="com.github.intellij.plugins.github_copilot_quota_monitor.statusbar.CopilotQuotaStatusBarWidgetFactory"
             order="first"/>
+
+        <!-- Settings panel: Settings → Tools → GitHub Copilot Quota Monitor -->
+        <applicationConfigurable
+            parentId="tools"
+            instance="com.github.intellij.plugins.github_copilot_quota_monitor.settings.CopilotQuotaConfigurable"
+            id="com.github.intellij.plugins.github_copilot_quota_monitor.settings"
+            displayName="GitHub Copilot Quota Monitor"/>
 
     </extensions>
 </idea-plugin>

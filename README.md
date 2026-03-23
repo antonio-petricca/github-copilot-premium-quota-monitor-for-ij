@@ -1,6 +1,6 @@
 # GitHub Copilot Premium Quota Monitor
 
-An IntelliJ IDEA plugin that displays your remaining **GitHub Copilot premium AI-model quota**
+An IntelliJ Platform plugin that displays your remaining **GitHub Copilot premium AI-model quota**
 directly in the IDE status bar, so you always know how many premium requests you have left for
 the current billing period.
 
@@ -11,11 +11,12 @@ the current billing period.
 1. [Features](#features)
 2. [Requirements](#requirements)
 3. [Installation](#installation)
-4. [Usage](#usage)
-5. [Authentication](#authentication)
-6. [Status Bar States](#status-bar-states)
-7. [Building from Source](#building-from-source)
-8. [Architecture](#architecture)
+4. [First-Time Setup](#first-time-setup)
+5. [Usage](#usage)
+6. [Authentication](#authentication)
+7. [Status Bar States](#status-bar-states)
+8. [Building from Source](#building-from-source)
+9. [Architecture](#architecture)
 
 ---
 
@@ -25,24 +26,27 @@ the current billing period.
 - **Auto-refresh** — quota is fetched in the background every **5 minutes**.
 - **On-demand refresh** — click the widget to force an immediate update.
 - **Tooltip** — hover the widget to see used, remaining, total, and percentage consumed.
+- **Standalone authentication** — implements the GitHub OAuth Device Flow (RFC 8628) directly,
+  with no dependency on any other plugin.
+- **Secure token storage** — the OAuth token is kept in IntelliJ's built-in PasswordSafe
+  (OS keychain, KDE Wallet, or encrypted file depending on the platform).
 - **Graceful error handling** — distinct visual states for loading, unlimited plans, missing
   account, and network errors.
-- **Zero extra authentication** — fully delegates sign-in to the official GitHub Copilot plugin.
 
 ---
 
 ## Requirements
 
-| Requirement | Version |
+| Requirement | Version / Notes |
 |---|---|
-| IntelliJ IDEA **Ultimate** | 2025.2 (build 252) or later |
-| [GitHub Copilot plugin][gh:copilot-plugin] | any recent version |
-| GitHub account signed in through the Copilot plugin | — |
+| IntelliJ IDEA **Community** or **Ultimate** | 2025.2 (build 252) or later |
+| Any other IntelliJ-based IDE | PyCharm, WebStorm, GoLand, … — build 252+ |
+| GitHub account with an active Copilot subscription | — |
 
-> [!IMPORTANT]
-> The **GitHub Copilot** plugin (`com.github.copilot`) is a **mandatory dependency**.  
-> If it is not installed or is disabled, IntelliJ will refuse to load this plugin and will display
-> a clear error message asking you to install it first.
+> [!NOTE]
+> This plugin has **no dependency** on the GitHub Copilot plugin or on any other third-party
+> plugin. It works on IntelliJ IDEA Community edition and any other JetBrains IDE that runs
+> on build 252 or later.
 
 ---
 
@@ -51,9 +55,10 @@ the current billing period.
 ### From a built ZIP (recommended for local use)
 
 1. Build the plugin (see [Building from Source](#building-from-source)).
-2. In IntelliJ IDEA, open **Settings → Plugins → ⚙ → Install Plugin from Disk…**
+2. In the IDE, open **Settings → Plugins → ⚙ → Install Plugin from Disk…**
 3. Select the `.zip` file generated under `build/distributions/`.
 4. Restart the IDE.
+5. Complete the [First-Time Setup](#first-time-setup).
 
 ### From JetBrains Marketplace *(when published)*
 
@@ -61,10 +66,27 @@ Search for **"GitHub Copilot Premium Quota Monitor"** in **Settings → Plugins 
 
 ---
 
+## First-Time Setup
+
+After installing the plugin, you must sign in with your GitHub account once:
+
+1. Open **Settings → Tools → GitHub Copilot Quota Monitor**.
+2. Click **Sign in with GitHub**.
+3. A browser window opens automatically at `https://github.com/login/device`.
+   If the browser does not open, copy the URL from the dialog and paste it manually.
+4. Enter the **one-time code** shown in the dialog (or click **Copy Code** first).
+5. Authorize the application on GitHub.
+6. The dialog closes automatically and the status bar widget starts showing your quota.
+
+To revoke access, click **Sign out** in the same settings panel. You can re-authenticate at
+any time by clicking **Sign in with GitHub** again.
+
+---
+
 ## Usage
 
-After installation and IDE restart the widget appears automatically in the **status bar**
-at the bottom of every project window.
+After sign-in the widget appears automatically in the **status bar** at the bottom of every
+project window.
 
 ```
 ⊙ 150/300
@@ -93,27 +115,42 @@ GitHub Copilot — Premium quota
 
 ### Enabling / Disabling the widget
 
-The widget can be toggled via the status bar context menu:  
+The widget can be toggled via the status bar context menu:
 **Right-click the status bar → GitHub Copilot Premium Quota**.
 
 ---
 
 ## Authentication
 
-This plugin does **not** implement its own authentication flow.
+The plugin implements the **GitHub OAuth 2.0 Device Authorization Grant** ([RFC 8628][rfc8628])
+independently — no other plugin is required.
 
-When the quota is fetched, the plugin:
+### Flow
 
-1. Reads the GitHub OAuth token stored by IntelliJ's built-in **GitHub account manager**
-   (`GHAccountManager`, provided by the bundled `org.jetbrains.plugins.github` plugin).
-   This is the same token registered when you sign in through the official GitHub Copilot plugin.
-2. Calls `GET https://api.github.com/copilot_internal/user` with that token — the same
-   internal endpoint used by the Copilot plugin itself.
-3. Parses the response for premium quota fields and caches the result for 5 minutes.
+1. The user opens **Settings → Tools → GitHub Copilot Quota Monitor** and clicks
+   **Sign in with GitHub**.
+2. The plugin requests a device code from `https://github.com/login/device/code`.
+3. A dialog displays a one-time code and opens `https://github.com/login/device` in the browser.
+4. The plugin polls `https://github.com/login/oauth/access_token` in a background thread
+   until the user completes the authorization on GitHub.
+5. The resulting OAuth token is stored securely in IntelliJ's **PasswordSafe**
+   (OS keychain on macOS/Windows, KDE Wallet or encrypted file on Linux).
+6. On every quota fetch the plugin calls
+   `GET https://api.github.com/copilot_internal/user` using that token.
+
+### Token lifecycle
+
+| Event | Behaviour |
+|---|---|
+| First use | Token is absent → status bar shows `⊙ Copilot ⚠`; tooltip guides to Settings |
+| Token valid | Quota is fetched and cached for 5 minutes |
+| Token revoked / expired (HTTP 401 or 403) | Token is cleared automatically; user is prompted to sign in again via the tooltip |
+| Sign out | Token and username are removed from PasswordSafe immediately |
 
 > [!NOTE]
-> If you are signed into multiple GitHub accounts, the token of the **first** account returned
-> by the account manager is used. Future versions may add account selection.
+> The OAuth App client ID used for the Device Flow (`Iv1.b507a08c87ecfe98`) is the publicly
+> documented identifier for GitHub Copilot IDE integrations. Device Flow does not require a
+> client secret on the client side (RFC 8628 §7).
 
 ---
 
@@ -124,11 +161,11 @@ When the quota is fetched, the plugin:
 | `⊙ Copilot` | Initial load in progress |
 | `⊙ 150/300` | Quota data retrieved — *remaining* / *total* |
 | `⊙ Copilot ∞` | Your plan has no premium request limit |
-| `⊙ Copilot ⚠` | No GitHub account found, or token is invalid |
-| `⊙ Copilot ✗` | Network error or unexpected API response |
+| `⊙ Copilot ⚠` | Not signed in, or token expired — see tooltip |
+| `⊙ Copilot ✗` | Network error or unexpected API response — see tooltip |
 
 All error details are available in the tooltip and in the IDE log
-(`Help → Show Log in Explorer/Finder`).
+(`Help → Show Log in Explorer / Finder`).
 
 ---
 
@@ -137,7 +174,7 @@ All error details are available in the tooltip and in the IDE log
 ### Prerequisites
 
 - JDK 21+
-- Internet access (to download Gradle dependencies and the IntelliJ SDK on first run)
+- Internet access (Gradle downloads the IntelliJ Community SDK on first run)
 
 ### Steps
 
@@ -162,9 +199,9 @@ build/distributions/github-copilot-premium-quota-monitor-for-ij-<version>.zip
 ./gradlew runIde
 ```
 
-This launches a fresh IntelliJ IDEA instance with the plugin pre-installed. You will need to
-install and sign in to the GitHub Copilot plugin inside that sandbox instance to test the full
-flow.
+This launches a sandboxed IntelliJ IDEA Community instance with the plugin pre-installed.
+Open **Settings → Tools → GitHub Copilot Quota Monitor** inside the sandbox and sign in to
+test the full authentication flow.
 
 ### Other useful tasks
 
@@ -181,22 +218,27 @@ flow.
 ```
 src/main/kotlin/com/github/intellij/plugins/github_copilot_quota_monitor/
 ├── services/
-│   └── CopilotQuotaService.kt          # Application-level service
-│                                        # Fetches quota, manages cache,
-│                                        # resolves GitHub OAuth token
+│   ├── GitHubAuthService.kt            # OAuth Device Flow + PasswordSafe token store
+│   └── CopilotQuotaService.kt          # Quota fetch, cache, JSON parsing
+├── ui/
+│   └── GitHubDeviceFlowDialog.kt       # Modal dialog: shows user code, polls for token
+├── settings/
+│   └── CopilotQuotaConfigurable.kt     # Settings → Tools panel (sign in / sign out)
 └── statusbar/
     ├── CopilotQuotaStatusBarWidget.kt   # Status bar widget (text + tooltip + click)
-    └── CopilotQuotaStatusBarWidgetFactory.kt  # Factory registered in plugin.xml
+    └── CopilotQuotaStatusBarWidgetFactory.kt
 ```
 
 ### Key design decisions
 
 | Decision | Rationale |
 |---|---|
-| `com.github.copilot` as hard `<depends>` | Guarantees the Copilot plugin is present; IntelliJ handles the error message automatically if it is missing |
-| `org.jetbrains.plugins.github` for token retrieval | Stable, public IntelliJ API; avoids fragile reflection into Copilot plugin internals |
-| Application-scoped service | Quota data is IDE-wide, not per-project; avoids duplicate network calls |
-| 5-minute cache with atomic references | Thread-safe, prevents API rate-limiting, no background threads kept alive permanently |
-| Flexible JSON parser | Handles multiple field-name variants across GitHub API versions without breaking |
+| **No plugin dependencies** | Only `com.intellij.modules.platform` is required → works on Community, Ultimate, and all other IntelliJ-based IDEs |
+| **OAuth Device Flow (RFC 8628)** | Industry-standard, browser-based auth; no client secret needed on the device; same flow used by GitHub CLI and other IDE integrations |
+| **PasswordSafe for token storage** | IntelliJ's built-in credential store; uses OS keychain on macOS/Windows; no plain-text secrets |
+| **Build against Community SDK** | Guarantees the plugin only uses APIs available in all editions |
+| **Application-scoped services** | Quota data and auth state are IDE-wide; avoids duplicate network calls across multiple open projects |
+| **5-minute cache with atomic references** | Thread-safe, prevents API rate-limiting, no persistent background threads |
+| **Multi-layout JSON parser** | Handles `limited_user_quotas`, nested quota objects, and flat fields across GitHub API versions |
 
-[gh:copilot-plugin]: https://plugins.jetbrains.com/plugin/17718-github-copilot
+[rfc8628]: https://www.rfc-editor.org/rfc/rfc8628

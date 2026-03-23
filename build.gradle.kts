@@ -17,17 +17,12 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaUltimate("2025.2.4")
+        // Build against Community edition — the plugin uses only platform APIs
+        // and therefore runs on all IntelliJ-based IDEs (Community, Ultimate,
+        // PyCharm, WebStorm, GoLand, …).
+        intellijIdeaCommunity("2025.2.4")
         jetbrainsRuntime()
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
-
-        // Kotlin plugin (bundled in IntelliJ IDEA Ultimate)
-        bundledPlugin("org.jetbrains.kotlin")
-
-        // GitHub integration plugin (bundled in IntelliJ IDEA Ultimate).
-        // Provides GHAccountManager used to retrieve the OAuth token
-        // that the GitHub Copilot plugin has stored for the signed-in user.
-        bundledPlugin("org.jetbrains.plugins.github")
     }
 }
 
@@ -35,7 +30,7 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "252"
-            // untilBuild is intentionally left unset to allow all future 252.x builds
+            // untilBuild is intentionally left unset to allow all future builds
         }
 
         changeNotes = """
