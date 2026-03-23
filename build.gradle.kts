@@ -21,10 +21,13 @@ dependencies {
         jetbrainsRuntime()
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
 
-        // Add plugin dependencies for compilation here:
-
-
+        // Kotlin plugin (bundled in IntelliJ IDEA Ultimate)
         bundledPlugin("org.jetbrains.kotlin")
+
+        // GitHub integration plugin (bundled in IntelliJ IDEA Ultimate).
+        // Provides GHAccountManager used to retrieve the OAuth token
+        // that the GitHub Copilot plugin has stored for the signed-in user.
+        bundledPlugin("org.jetbrains.plugins.github")
     }
 }
 

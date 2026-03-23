@@ -5,24 +5,52 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>Github-copilot-premium-quota-monitor-for-ij</name>
+    <name>GitHub Copilot Premium Quota Monitor</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor url="https://www.yourcompany.com">YourCompany</vendor>
+    <vendor url="https://github.com/antonio-petricca/github-copilot-premium-quota-monitor-for-ij">GitHub Copilot Premium Quota Monitor</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[
-        Enter short description for your plugin here.<br>
-        <em>most HTML tags may be used</em>
+        Displays the remaining <b>GitHub Copilot premium AI-model quota</b> directly in the IDE status bar.<br/>
+        The widget refreshes automatically every 5 minutes and on click.<br/>
+        <br/>
+        <b>Requirements</b><br/>
+        <ul>
+            <li>The official <em>GitHub Copilot</em> plugin must be installed and activated.</li>
+            <li>You must be signed in to GitHub through the Copilot plugin.</li>
+        </ul>
     ]]></description>
 
-    <!-- Product and plugin compatibility requirements.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <!--
+        Hard dependency on the official GitHub Copilot plugin.
+        IntelliJ will refuse to load this plugin (and show a clear error to the user)
+        if com.github.copilot is not installed or disabled.
+    -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.github.copilot</depends>
 
-    <depends>org.jetbrains.kotlin</depends>
+    <!--
+        The bundled GitHub integration plugin provides GHAccountManager,
+        which exposes the OAuth token that the Copilot plugin registered.
+        Available in IntelliJ IDEA Ultimate out of the box.
+    -->
+    <depends>org.jetbrains.plugins.github</depends>
+
     <!-- Extensions defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+
+        <!-- Application-scoped service: fetches and caches quota data -->
+        <applicationService
+            serviceImplementation="com.github.intellij.plugins.github_copilot_quota_monitor.services.CopilotQuotaService"/>
+
+        <!-- Status bar widget factory -->
+        <statusBarWidgetFactory
+            id="GitHubCopilotQuotaWidget"
+            implementation="com.github.intellij.plugins.github_copilot_quota_monitor.statusbar.CopilotQuotaStatusBarWidgetFactory"
+            order="first"/>
+
     </extensions>
 </idea-plugin>
