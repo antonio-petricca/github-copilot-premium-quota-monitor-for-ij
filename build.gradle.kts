@@ -18,6 +18,7 @@ repositories {
 dependencies {
     intellijPlatform {
         intellijIdeaUltimate("2025.2.4")
+        jetbrainsRuntime()
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
 
         // Add plugin dependencies for compilation here:
