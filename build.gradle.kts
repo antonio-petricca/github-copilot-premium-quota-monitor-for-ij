@@ -7,6 +7,7 @@ plugins {
 group = "com.github.intellij.plugins.github_copilot_quota_monitor"
 version = "1.0-SNAPSHOT"
 
+// Read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
 repositories {
     mavenCentral()
     intellijPlatform {
@@ -14,10 +15,9 @@ repositories {
     }
 }
 
-// Read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
 dependencies {
     intellijPlatform {
-        intellijIdea("2025.2.4")
+        intellijIdeaUltimate("2025.2.4")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
 
         // Add plugin dependencies for compilation here:
