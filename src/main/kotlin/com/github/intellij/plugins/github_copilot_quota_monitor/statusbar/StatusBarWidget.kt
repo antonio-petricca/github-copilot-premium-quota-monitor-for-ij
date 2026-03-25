@@ -113,7 +113,7 @@ class CopilotQuotaStatusBarWidget(
     private fun updateLabel(result: PluginService.QuotaResult) {
         label.text = when (result) {
             is PluginService.QuotaResult.Loading   -> Messages.get("statusbar_widget_initial")
-            is PluginService.QuotaResult.Available -> Messages.format("statusbar_widget_available", result.quota.remaining, result.quota.total)
+            is PluginService.QuotaResult.Available -> Messages.format("statusbar_widget_available", String.format("%.1f", result.quota.percentRemaining))
             is PluginService.QuotaResult.Unlimited -> Messages.get("statusbar_widget_unlimited")
             is PluginService.QuotaResult.NoAccount -> Messages.get("statusbar_widget_signin")
             is PluginService.QuotaResult.Error     -> Messages.get("statusbar_widget_error")
@@ -124,7 +124,7 @@ class CopilotQuotaStatusBarWidget(
 
             is PluginService.QuotaResult.Available -> {
                 val q = result.quota
-                Messages.format("statusbar_tooltip_available_html", q.remaining, q.total, q.used, String.format("%.1f", q.percentUsed))
+                Messages.format("statusbar_tooltip_available_html", String.format("%.1f", q.percentRemaining))
             }
 
             is PluginService.QuotaResult.Unlimited -> Messages.get("statusbar_tooltip_unlimited")

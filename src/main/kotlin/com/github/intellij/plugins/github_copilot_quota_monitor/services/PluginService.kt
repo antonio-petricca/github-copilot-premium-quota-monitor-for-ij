@@ -45,9 +45,10 @@ class PluginService {
         }
     }
 
-    data class QuotaInfo(val used: Int, val remaining: Int, val total: Int) {
-        val percentUsed: Double
-            get() = if (total > 0) used.toDouble() / total * 100.0 else 0.0
+    data class QuotaInfo(val percentRemaining: Double) {
+        constructor(used: Int, remaining: Int, total: Int) : this(
+            if (total > 0) remaining.toDouble() / total * 100.0 else 0.0
+        )
     }
 
     sealed class QuotaResult {
@@ -120,6 +121,19 @@ class PluginService {
     private fun parseQuota(json: String): QuotaResult {
         return try {
             val root = JsonParser.parseString(json).asJsonObject
+            
+            // Try new format: quota_snapshots.premium_interactions.percent_remaining
+            root.getAsJsonObject("quota_snapshots")?.let { snapshots ->
+                snapshots.getAsJsonObject("premium_interactions")?.let { premiumInteractions ->
+                    val percentRemaining = premiumInteractions["percent_remaining"]?.asDouble
+                    if (percentRemaining != null) {
+                        val unlimited = premiumInteractions["unlimited"]?.asBoolean ?: false
+                        return if (unlimited) QuotaResult.Unlimited else QuotaResult.Available(QuotaInfo(percentRemaining))
+                    }
+                }
+            }
+            
+            // Fallback to old format: limited_user_quotas
             root.getAsJsonObject("limited_user_quotas")?.let { limitedQuotas ->
                 val interactions = limitedQuotas.getAsJsonObject("premium_interactions")
                     ?: limitedQuotas.getAsJsonObject("completions")
@@ -132,6 +146,8 @@ class PluginService {
                     }
                 }
             }
+            
+            // Fallback to other old formats
             root.getAsJsonObject("quota")
                 ?: root.getAsJsonObject("premium_interactions")
                 ?: root.getAsJsonObject("premium_requests")
