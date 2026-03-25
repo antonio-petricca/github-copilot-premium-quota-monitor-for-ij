@@ -5,14 +5,14 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>${plugin_name}</name>
+    <name>GitHub Copilot Premium Quota Monitor</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor url="https://github.com/antonio-petricca/github-copilot-premium-quota-monitor-for-ij">Antonio Petricca</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
-    <description>${plugin_description}</description>
+    <description>Monitors and displays the remaining GitHub Copilot premium model quota directly in the IDE status bar. Supports OAuth Device Flow authentication and auto-refresh.</description>
 
     <!-- Only the IntelliJ Platform base module is required.
          This makes the plugin compatible with all IntelliJ-based IDEs
