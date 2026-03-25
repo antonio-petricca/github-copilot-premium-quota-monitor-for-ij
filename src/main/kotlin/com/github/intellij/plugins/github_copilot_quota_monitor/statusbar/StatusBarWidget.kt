@@ -22,6 +22,8 @@ import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
+import com.intellij.ui.JBColor
+import java.awt.Color
 import java.awt.Point
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -68,6 +70,9 @@ class CopilotQuotaStatusBarWidget(
             }
         })
     }
+
+    // Keep the default foreground so we can restore it for non-percent states.
+    private val defaultLabelForeground = label.foreground
 
     /** Background refresh every 5 minutes. */
     private val refreshTimer = Timer(5 * 60 * 1_000) { refresh() }.apply {
@@ -128,6 +133,22 @@ class CopilotQuotaStatusBarWidget(
             is PluginService.QuotaResult.NoAccount -> Messages.get("statusbar_tooltip_noaccount_html")
             is PluginService.QuotaResult.Error     -> Messages.format("statusbar_tooltip_error", result.message)
         }
+
+        // Color the percentage label based on remaining quota:
+        // - red if <= 10%
+        // - orange if <= 20%
+        // Otherwise use the default label foreground.
+        when (result) {
+            is PluginService.QuotaResult.Available -> {
+                val percent = result.quota.percentRemaining
+                label.foreground = when {
+                    percent <= 10.0 -> JBColor(Color(0xD32F2F), Color(0xFF5252)) // red (light/dark)
+                    percent <= 20.0 -> JBColor(Color(0xF57C00), Color(0xFFB74D)) // orange (light/dark)
+                    else -> defaultLabelForeground
+                }
+            }
+            else -> label.foreground = defaultLabelForeground
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -150,6 +171,7 @@ class CopilotQuotaStatusBarWidget(
 
     // Format an ISO-8601 timestamp string (UTC or with offset) into a user-friendly
     // local date/time string. Falls back to the original string on parse errors.
+    @Suppress("unused")
     private fun formatTimestamp(ts: String): String {
         return try {
             val zoned: ZonedDateTime = try {
