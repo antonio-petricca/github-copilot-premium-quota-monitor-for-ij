@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <!--
+        GitHub Copilot icon — 16×16 (status bar / toolbar) — dark-theme variant
+    -->
+    <!-- Circular light-blue head -->
+    <circle cx="8" cy="8" r="7.5" fill="#58A6FF"/>
+    <!-- Dark face area -->
+    <path fill="#0D1117"
+          d="M8 2.5C5.02 2.5 2.5 5.02 2.5 8c0 1.72.76 3.26 1.97 4.32
+             .25.22.52.41.8.58.22.13.44.24.68.34.27.1.55.18.84.23C7.13 13.49 7.56 13.5 8 13.5
+             s.87-.01 1.21-.03c.29-.05.57-.13.84-.23.24-.1.46-.21.68-.34.28-.17.55-.36.8-.58
+             C12.74 11.26 13.5 9.72 13.5 8 13.5 5.02 10.98 2.5 8 2.5Z"/>
+    <!-- Light-blue visor bar -->
+    <rect x="2.5" y="6" width="11" height="4.5" rx="2.25" fill="#58A6FF"/>
+    <!-- Left dark eye -->
+    <circle cx="5.8" cy="8.25" r="1.5" fill="#0D1117"/>
+    <!-- Right dark eye -->
+    <circle cx="10.2" cy="8.25" r="1.5" fill="#0D1117"/>
+    <!-- Left light pupil -->
+    <circle cx="5.8" cy="8.25" r="0.72" fill="#58A6FF"/>
+    <!-- Right light pupil -->
+    <circle cx="10.2" cy="8.25" r="0.72" fill="#58A6FF"/>
+</svg>
+

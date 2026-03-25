@@ -1,6 +1,7 @@
 package com.github.intellij.plugins.github_copilot_quota_monitor.statusbar
 
 import com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages
+import com.github.intellij.plugins.github_copilot_quota_monitor.icons.CopilotIcons
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
 import com.intellij.icons.AllIcons
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.PluginService
@@ -51,6 +52,8 @@ class CopilotQuotaStatusBarWidget(
     private var busConnection: MessageBusConnection? = null
 
     private val label: JLabel = JLabel(Messages.get("statusbar_widget_initial")).apply {
+        icon = CopilotIcons.Logo
+        iconTextGap = 4
         border = JBUI.Borders.empty(0, 4)
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
@@ -168,7 +171,7 @@ class RefreshAction : AnAction(
 class SignInAction(private val project: Project) : AnAction(
     Messages.get("statusbar_action_signin"),
     null,
-    AllIcons.Vcs.Vendors.Github,
+    CopilotIcons.Logo,
 ) {
 
     override fun actionPerformed(e: AnActionEvent) {
