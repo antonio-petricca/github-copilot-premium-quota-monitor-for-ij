@@ -1,25 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
     <!--
         GitHub Copilot icon — light-theme variant
-        Robot face with visor eyes, based on GitHub Copilot visual identity
+        Robot helmet / visor face, 2 px padding all around to avoid edge clipping
     -->
-    <!-- Circular blue background (head) -->
-    <circle cx="20" cy="20" r="20" fill="#0969DA"/>
-    <!-- White face / head inner area -->
+
+    <!-- Blue background circle — stays 2 px away from all edges -->
+    <circle cx="20" cy="20" r="18" fill="#0969DA"/>
+
+    <!-- White face-plate: dome top, flat chin, rounded corners -->
     <path fill="#FFFFFF"
-          d="M20 6C12.27 6 6 12.27 6 20c0 4.44 2.01 8.41 5.18 11.08
-             .67.56 1.4 1.06 2.17 1.48.25.14.51.27.77.39.54.25 1.1.46 1.68.63
-             .34.1.69.18 1.04.25C17.97 33.93 18.97 34 20 34s2.03-.07 2.96-.18
-             c.35-.07.7-.15 1.04-.25.58-.17 1.14-.38 1.68-.63.26-.12.52-.25.77-.39
-             .77-.42 1.5-.92 2.17-1.48C31.99 28.41 34 24.44 34 20 34 12.27 27.73 6 20 6Z"/>
-    <!-- Blue visor bar (covers both eyes) -->
-    <rect x="9" y="16" width="22" height="11" rx="5.5" fill="#0969DA"/>
-    <!-- Left white eye sclera -->
-    <circle cx="15" cy="21.5" r="3.5" fill="#FFFFFF"/>
-    <!-- Right white eye sclera -->
-    <circle cx="25" cy="21.5" r="3.5" fill="#FFFFFF"/>
-    <!-- Left blue pupil -->
-    <circle cx="15" cy="21.5" r="1.7" fill="#0969DA"/>
-    <!-- Right blue pupil -->
-    <circle cx="25" cy="21.5" r="1.7" fill="#0969DA"/>
+          d="M20 9
+             C14.2 9 9.5 13.4 9 18.9
+             L9 29
+             Q9 32 12 32
+             L28 32
+             Q31 32 31 29
+             L31 18.9
+             C30.5 13.4 25.8 9 20 9Z"/>
+
+    <!-- Left "ear" pad -->
+    <rect x="6" y="17" width="4" height="8" rx="2" fill="#FFFFFF"/>
+    <!-- Right "ear" pad -->
+    <rect x="30" y="17" width="4" height="8" rx="2" fill="#FFFFFF"/>
+
+    <!-- Blue visor bar spanning the full face width -->
+    <rect x="9" y="17" width="22" height="10" rx="5" fill="#0969DA"/>
+
+    <!-- Left eye — white sclera -->
+    <circle cx="15" cy="22" r="3.2" fill="#FFFFFF"/>
+    <!-- Right eye — white sclera -->
+    <circle cx="25" cy="22" r="3.2" fill="#FFFFFF"/>
+
+    <!-- Left pupil -->
+    <circle cx="15" cy="22" r="1.5" fill="#0969DA"/>
+    <!-- Right pupil -->
+    <circle cx="25" cy="22" r="1.5" fill="#0969DA"/>
 </svg>
