@@ -11,6 +11,7 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
 import java.awt.Desktop
+import java.awt.Component
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.datatransfer.StringSelection
@@ -83,25 +84,19 @@ class DeviceAuthFlowDialog(
         contentPanel.layout = BoxLayout(contentPanel, BoxLayout.Y_AXIS)
         contentPanel.border = JBUI.Borders.emptyTop(16)
 
-        // Step 1: URL
-        contentPanel.add(JBLabel(Messages.get("deviceauth_step1")))
-        contentPanel.add(Box.createVerticalStrut(8))
-        val urlField = JTextField(response.verificationUri)
-        urlField.isEditable = false
-        val openBrowserBtn = JButton(Messages.get("deviceauth_open_url"))
-        openBrowserBtn.addActionListener { openBrowser() }
-        val urlPanel = JPanel(BorderLayout(8, 0))
-        urlPanel.add(urlField, BorderLayout.CENTER)
-        urlPanel.add(openBrowserBtn, BorderLayout.EAST)
-        contentPanel.add(urlPanel)
-        contentPanel.add(Box.createVerticalStrut(16))
-
-        // Step 2: Code
-        contentPanel.add(JBLabel(Messages.get("deviceauth_step2")))
+        // Step 1: Code (show code first, use step2 text for numbering since messages define step2 as "Enter this code")
+        val step2Label = JBLabel(Messages.get("deviceauth_step2"))
+        // Ensure the deviceauth_step2 label is left-aligned within the BoxLayout
+        step2Label.horizontalAlignment = SwingConstants.LEFT
+        step2Label.alignmentX = Component.LEFT_ALIGNMENT
+        step2Label.maximumSize = Dimension(Integer.MAX_VALUE, step2Label.preferredSize.height)
+        contentPanel.add(step2Label)
         contentPanel.add(Box.createVerticalStrut(8))
         val codeLabel = JBLabel(response.userCode)
         codeLabel.font = Font(Font.MONOSPACED, Font.BOLD, 24)
-        codeLabel.horizontalAlignment = SwingConstants.CENTER
+        // Left-align the code text to line up with the step labels
+        codeLabel.horizontalAlignment = SwingConstants.LEFT
+        codeLabel.alignmentX = Component.LEFT_ALIGNMENT
         codeLabel.border = JBUI.Borders.empty(12)
         val copyBtn = JButton(Messages.get("deviceauth_copy"))
         copyBtn.addActionListener {
@@ -109,9 +104,35 @@ class DeviceAuthFlowDialog(
         }
         val codePanel = JPanel(BorderLayout(12, 0))
         codePanel.border = JBUI.Borders.empty(8)
+        // Allow the code panel to expand horizontally and align to the left in the BoxLayout
+        codePanel.alignmentX = Component.LEFT_ALIGNMENT
+        codePanel.maximumSize = Dimension(Integer.MAX_VALUE, codeLabel.preferredSize.height + 24)
         codePanel.add(codeLabel, BorderLayout.CENTER)
         codePanel.add(copyBtn, BorderLayout.EAST)
         contentPanel.add(codePanel)
+        contentPanel.add(Box.createVerticalStrut(16))
+
+        // Step 2: URL (show URL second, use step1 text for numbering which reads "Open in browser")
+        val step1Label = JBLabel(Messages.get("deviceauth_step1"))
+        // Ensure the deviceauth_step1 label is left-aligned within the BoxLayout
+        step1Label.horizontalAlignment = SwingConstants.LEFT
+        step1Label.alignmentX = Component.LEFT_ALIGNMENT
+        step1Label.maximumSize = Dimension(Integer.MAX_VALUE, step1Label.preferredSize.height)
+        contentPanel.add(step1Label)
+        contentPanel.add(Box.createVerticalStrut(8))
+        val urlField = JTextField(response.verificationUri)
+        urlField.isEditable = false
+        // Make the URL field expand horizontally so it aligns with labels
+        urlField.maximumSize = Dimension(Integer.MAX_VALUE, urlField.preferredSize.height)
+        val openBrowserBtn = JButton(Messages.get("deviceauth_open_url"))
+        openBrowserBtn.addActionListener { openBrowser() }
+        val urlPanel = JPanel(BorderLayout(8, 0))
+        // Align and allow the URL panel to expand to the available width
+        urlPanel.alignmentX = Component.LEFT_ALIGNMENT
+        urlPanel.maximumSize = Dimension(Integer.MAX_VALUE, urlField.preferredSize.height + 8)
+        urlPanel.add(urlField, BorderLayout.CENTER)
+        urlPanel.add(openBrowserBtn, BorderLayout.EAST)
+        contentPanel.add(urlPanel)
         contentPanel.add(Box.createVerticalStrut(16))
 
         // Status label
