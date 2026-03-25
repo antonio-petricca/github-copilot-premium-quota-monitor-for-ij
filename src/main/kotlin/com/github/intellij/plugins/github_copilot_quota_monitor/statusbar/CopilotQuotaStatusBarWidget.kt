@@ -76,6 +76,8 @@ class CopilotQuotaStatusBarWidget(
 
     override fun install(statusBar: StatusBar) {
         this.statusBar = statusBar
+        // Mostra subito lo stato corrente (anche se la quota è già aggiornata)
+        updateLabel(quotaService().cachedResult)
         refresh()
         refreshTimer.start()
     }
