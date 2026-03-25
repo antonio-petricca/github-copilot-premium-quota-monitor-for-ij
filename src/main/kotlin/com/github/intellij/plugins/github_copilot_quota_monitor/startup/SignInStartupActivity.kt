@@ -42,7 +42,7 @@ class SignInStartupActivity : ProjectActivity {
                     dlg.show()
                 }
             } catch (e: Exception) {
-                LOG.warn("Failed to initiate sign-in flow", e)
+                LOG.warn("[CopilotQuotaMonitor] Failed to initiate sign-in flow", e)
                 ApplicationManager.getApplication().invokeLater {
                                 JOptionPane.showMessageDialog(
                                                 null,

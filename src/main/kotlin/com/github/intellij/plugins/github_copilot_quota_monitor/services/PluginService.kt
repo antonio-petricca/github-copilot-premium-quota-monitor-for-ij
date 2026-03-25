@@ -87,7 +87,7 @@ class PluginService {
                 else -> QuotaResult.Error(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("general_api_http", code))
             }
         } catch (e: Exception) {
-            LOG.warn("Failed to fetch GitHub Copilot quota", e)
+            LOG.warn("[CopilotQuotaMonitor] Failed to fetch Copilot quota", e)
             QuotaResult.Error(e.message ?: com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("network_error"))
         }
     }
@@ -130,7 +130,7 @@ class PluginService {
             }
             QuotaResult.Unlimited
         } catch (e: Exception) {
-            LOG.warn("Failed to parse Copilot quota response", e)
+            LOG.warn("[CopilotQuotaMonitor] Failed to parse quota response", e)
             QuotaResult.Error(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("general_parse_failed", e.message))
         }
     }

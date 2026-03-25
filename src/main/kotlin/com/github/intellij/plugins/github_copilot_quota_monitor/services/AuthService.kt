@@ -66,9 +66,9 @@ class AuthService {
                 cachedToken.set(token)
                 val username = PasswordSafe.instance.getPassword(USERNAME_ATTRS)
                 cachedUsername.set(username)
-                LOG.info("[CopilotQuotaMonitor] Loaded cached credentials: token=${if (token != null) "present" else "null"}, username=${username}")
+                LOG.info("[CopilotQuotaMonitor] Cached credentials loaded: token=${if (token != null) "present" else "none"}, user=${username}")
             } catch (e: Exception) {
-                LOG.warn("Failed to load cached credentials", e)
+                LOG.warn("[CopilotQuotaMonitor] Failed to load cached credentials", e)
             }
         }
     }
@@ -101,7 +101,7 @@ class AuthService {
 
     fun getToken(): String? {
         val token = PasswordSafe.instance.getPassword(TOKEN_ATTRS)
-        LOG.info("[CopilotQuotaMonitor] getToken: token is ${if (token != null) "present" else "null"}")
+        LOG.info("[CopilotQuotaMonitor] token present=${token != null}")
         // Keep cache in sync for callers that must not perform blocking IO
         cachedToken.set(token)
         return token
@@ -120,12 +120,12 @@ class AuthService {
      * Must be called off the EDT.
      */
     fun saveAuthentication(token: String) {
-        LOG.info("[CopilotQuotaMonitor] saveAuthentication: saving token")
+        LOG.info("[CopilotQuotaMonitor] Saving token")
         // Update in-memory cache immediately so UI code can observe auth state
         cachedToken.set(token)
         PasswordSafe.instance.setPassword(TOKEN_ATTRS, token)
         val username = fetchUsername(token)
-        LOG.info("[CopilotQuotaMonitor] saveAuthentication: fetched username = $username")
+        LOG.info("[CopilotQuotaMonitor] Fetched username=$username")
         cachedUsername.set(username)
         PasswordSafe.instance.setPassword(USERNAME_ATTRS, username)
     }
@@ -141,7 +141,7 @@ class AuthService {
                 PasswordSafe.instance.setPassword(TOKEN_ATTRS, null)
                 PasswordSafe.instance.setPassword(USERNAME_ATTRS, null)
             } catch (e: Exception) {
-                LOG.warn("Failed to clear credentials from PasswordSafe", e)
+                LOG.warn("[CopilotQuotaMonitor] Failed to clear credentials from PasswordSafe", e)
             }
         }
     }
@@ -192,7 +192,7 @@ class AuthService {
                 else -> PollResult.Error(json["error_description"]?.asString ?: com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("unknown_error"))
             }
         } catch (e: Exception) {
-            LOG.warn("Device-flow poll error", e)
+            LOG.warn("[CopilotQuotaMonitor] Device-flow poll error", e)
             PollResult.Error(e.message ?: com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("network_error"))
         }
     }
@@ -213,7 +213,7 @@ class AuthService {
                 .asJsonObject["login"]?.asString
         else null
     } catch (e: Exception) {
-        LOG.warn("Failed to fetch GitHub username", e)
+        LOG.warn("[CopilotQuotaMonitor] Failed to fetch GitHub username", e)
         null
     }
 

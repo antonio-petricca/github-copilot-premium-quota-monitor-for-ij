@@ -180,7 +180,7 @@ class DeviceAuthFlowDialog(
                         }
                     }
                 } catch (e: Exception) {
-                    LOG.warn("Errore polling", e)
+                    LOG.warn("[CopilotQuotaMonitor] Polling error", e)
                     updateStatus(Messages.format("deviceauth_network_error_prefix", e.message))
                     return@Thread
                 }
@@ -209,7 +209,7 @@ class DeviceAuthFlowDialog(
         try {
             if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(URI(response.verificationUri))
         } catch (e: Exception) {
-            LOG.warn("Impossibile aprire il browser automaticamente", e)
+            LOG.warn("[CopilotQuotaMonitor] Failed to open browser", e)
         }
     }
 }
