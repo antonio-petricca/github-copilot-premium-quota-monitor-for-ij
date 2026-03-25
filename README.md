@@ -244,7 +244,7 @@ src/main/kotlin/com/github/intellij/plugins/github_copilot_quota_monitor/
 | **Application-scoped services** | Quota data and auth state are IDE-wide; avoids duplicate network calls across multiple open projects |
 | **5-minute cache with atomic references** | Thread-safe, prevents API rate-limiting, no persistent background threads |
 | **Multi-layout JSON parser** | Handles `limited_user_quotas`, nested quota objects, and flat fields across GitHub API versions |
-| **Context menu over settings panel** | Sign in/out actions directly from the status bar widget; no need to navigate to Settings |
+| **Context menu** | Sign in/out actions direttamente dal widget della status bar |
 | **First-run sign-in dialog** | Automates the initial setup flow; users can skip and sign in later via context menu |
 
 [rfc8628]: https://www.rfc-editor.org/rfc/rfc8628

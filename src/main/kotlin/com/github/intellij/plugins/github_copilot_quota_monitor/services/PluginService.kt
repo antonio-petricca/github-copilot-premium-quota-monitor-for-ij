@@ -64,7 +64,7 @@ class PluginService {
     private fun fetchQuota(): QuotaResult {
         val token = AuthService.getInstance().getToken()
             ?: return QuotaResult.NoAccount(
-                "Not signed in. Open Settings → Tools → GitHub Copilot Quota Monitor to sign in."
+                "Not signed in. Right-click the status bar widget and choose 'Sign in with GitHub' to sign in."
             )
         return try {
             val conn = (URI.create(COPILOT_USER_API_URL).toURL().openConnection() as HttpURLConnection).apply {
@@ -82,7 +82,7 @@ class PluginService {
                     AuthService.getInstance().clearAuthentication()
                     QuotaResult.NoAccount(
                         "GitHub token is invalid or expired (HTTP $code). " +
-                                "Open Settings → Tools → GitHub Copilot Quota Monitor to sign in again."
+                                "Right-click the status bar widget and choose 'Sign in with GitHub' to sign in again."
                     )
                 }
                 else -> QuotaResult.Error("GitHub API returned HTTP $code.")
