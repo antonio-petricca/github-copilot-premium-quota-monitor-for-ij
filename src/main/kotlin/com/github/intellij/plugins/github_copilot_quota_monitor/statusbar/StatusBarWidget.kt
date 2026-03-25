@@ -212,7 +212,7 @@ class SignOutAction : AnAction(Messages.get("statusbar_action_signout")) {
         val msg = if (username != null) Messages.format("statusbar_signout_confirm_when_username", username) else Messages.get("statusbar_signout_confirm_no_username")
 
         if (JOptionPane.showConfirmDialog(
-                null, msg, Messages.get("signout_title"), JOptionPane.YES_NO_OPTION
+                null, msg, Messages.get("statusbar_signout_title"), JOptionPane.YES_NO_OPTION
             ) == JOptionPane.YES_OPTION
         ) {
             auth.clearAuthentication()
