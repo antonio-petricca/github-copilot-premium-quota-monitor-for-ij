@@ -1,19 +1,19 @@
 package com.github.intellij.plugins.github_copilot_quota_monitor.startup
 
+import com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
 import com.github.intellij.plugins.github_copilot_quota_monitor.ui.DeviceAuthFlowDialog
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
-import java.text.MessageFormat
-import javax.swing.JOptionPane
+import com.intellij.openapi.ui.Messages as UiMessages
 
 /**
  * Startup activity that shows the sign-in dialog on the first IDE run
- * if the user is not yet authenticated.
+ * if the user has not yet authenticated.
  *
- * Registered via plugin.xml extension point: <projectActivity>
+ * Registered via the `<projectActivity>` extension point in plugin.xml.
  */
 class SignInStartupActivity : ProjectActivity {
 
@@ -22,37 +22,30 @@ class SignInStartupActivity : ProjectActivity {
     }
 
     override suspend fun execute(project: Project) {
-        val auth = AuthService.getInstance()
-        
-        // Only show signin dialog if not already authenticated
-        if (!auth.isAuthenticated()) {
+        if (!AuthService.getInstance().isAuthenticated()) {
             ApplicationManager.getApplication().invokeLater {
-                showSignInPrompt(project)
+                startSignInFlow(project)
             }
         }
     }
 
-    private fun showSignInPrompt(project: Project) {
-        // Start device-code request in background
+    private fun startSignInFlow(project: Project) {
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
                 val deviceCode = AuthService.getInstance().requestDeviceCode()
                 ApplicationManager.getApplication().invokeLater {
-                    val dlg = DeviceAuthFlowDialog(project, deviceCode)
-                    dlg.show()
+                    DeviceAuthFlowDialog(project, deviceCode).show()
                 }
             } catch (e: Exception) {
-                LOG.warn("[CopilotQuotaMonitor] Failed to initiate sign-in flow", e)
+                LOG.warn("Failed to initiate sign-in flow", e)
                 ApplicationManager.getApplication().invokeLater {
-                                JOptionPane.showMessageDialog(
-                                                null,
-                                                                                                                                                        MessageFormat.format(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("startup_startup_fail_msg"), e.message),
-                                                                                                                                                                                                com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("startup_startup_fail_title"),
-                                                JOptionPane.INFORMATION_MESSAGE
-                                            )
+                    UiMessages.showInfoMessage(
+                        project,
+                        Messages.format("startup_startup_fail_msg", e.message),
+                        Messages.get("startup_startup_fail_title"),
+                    )
                 }
             }
         }
     }
 }
-

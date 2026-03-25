@@ -6,7 +6,6 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.openapi.wm.StatusBarWidgetFactory
-import java.util.*
 
 /**
  * Factory that registers [CopilotQuotaStatusBarWidget] with IntelliJ's

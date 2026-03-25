@@ -10,6 +10,7 @@ interface QuotaListener {
 }
 
 object QuotaNotifier {
+    @JvmField
     val QUOTA_TOPIC: Topic<QuotaListener> = Topic.create("GitHubCopilotQuotaMonitor.Quota", QuotaListener::class.java)
 }
 
