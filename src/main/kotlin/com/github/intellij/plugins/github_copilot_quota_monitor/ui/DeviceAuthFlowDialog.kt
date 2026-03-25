@@ -49,7 +49,9 @@ class DeviceAuthFlowDialog(
         setCancelButtonText(Messages.get("deviceauth_button_cancel"))
         setOKButtonText(Messages.get("deviceauth_button_ok"))
         init()
-        window?.isAlwaysOnTop = true
+        // Do not force the dialog to be top-most; allow the IDE to manage window stacking.
+        // Setting isAlwaysOnTop = false ensures the dialog won't cover other IDE windows.
+        window?.isAlwaysOnTop = false
         // Start polling for authentication in background
         startPolling()
     }
