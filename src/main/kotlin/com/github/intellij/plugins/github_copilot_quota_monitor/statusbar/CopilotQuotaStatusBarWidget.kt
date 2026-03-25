@@ -210,6 +210,12 @@ class SignOutAction(private val project: Project) : AnAction("Sign out") {
             ) == JOptionPane.YES_OPTION
         ) {
             auth.clearAuthentication()
+            JOptionPane.showMessageDialog(
+                null,
+                "Successfully signed out.",
+                "GitHub Sign-out",
+                JOptionPane.INFORMATION_MESSAGE
+            )
         }
     }
 }
