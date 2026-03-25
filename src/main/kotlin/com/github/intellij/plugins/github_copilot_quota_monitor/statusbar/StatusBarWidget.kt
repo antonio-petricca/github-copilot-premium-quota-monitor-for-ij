@@ -2,6 +2,7 @@ package com.github.intellij.plugins.github_copilot_quota_monitor.statusbar
 
 import com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
+import com.intellij.icons.AllIcons
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.PluginService
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.QuotaListener
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.QuotaNotifier
@@ -153,14 +154,22 @@ class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
 }
 
 /** Triggers an immediate quota refresh. */
-class RefreshAction : AnAction(Messages.get("statusbar_action_refresh")) {
+class RefreshAction : AnAction(
+    Messages.get("statusbar_action_refresh"),
+    null,
+    AllIcons.Actions.Refresh,
+) {
     override fun actionPerformed(e: AnActionEvent) {
         PluginService.getInstance().refreshQuota()
     }
 }
 
 /** Starts a GitHub OAuth Device Flow sign-in. */
-class SignInAction(private val project: Project) : AnAction(Messages.get("statusbar_action_signin")) {
+class SignInAction(private val project: Project) : AnAction(
+    Messages.get("statusbar_action_signin"),
+    null,
+    AllIcons.Vcs.Vendors.Github,
+) {
 
     override fun actionPerformed(e: AnActionEvent) {
         ApplicationManager.getApplication().executeOnPooledThread {
@@ -185,7 +194,11 @@ class SignInAction(private val project: Project) : AnAction(Messages.get("status
 }
 
 /** Signs the user out and clears stored credentials. */
-class SignOutAction : AnAction(Messages.get("statusbar_action_signout")) {
+class SignOutAction : AnAction(
+    Messages.get("statusbar_action_signout"),
+    null,
+    AllIcons.Actions.Exit,
+) {
 
     override fun actionPerformed(e: AnActionEvent) {
         val auth     = AuthService.getInstance()
