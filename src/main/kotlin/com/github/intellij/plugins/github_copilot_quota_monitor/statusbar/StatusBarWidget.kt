@@ -18,6 +18,8 @@ import com.intellij.util.ui.JBUI
 import java.awt.Point
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.text.MessageFormat
+import java.util.*
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JOptionPane
@@ -41,6 +43,7 @@ class CopilotQuotaStatusBarWidget(
 
     companion object {
         const val WIDGET_ID = "GitHubCopilotQuotaWidget"
+        private val MESSAGES: ResourceBundle = ResourceBundle.getBundle("messages")
     }
 
     private var statusBar: StatusBar? = null
@@ -49,7 +52,7 @@ class CopilotQuotaStatusBarWidget(
      * The label that lives in the status bar.
      * Left-click opens the popup menu (Refresh / Sign in or Sign out).
      */
-    private val label: JLabel = JLabel("⊙ Copilot").apply {
+    private val label: JLabel = JLabel(MESSAGES.getString("widget_initial")).apply {
         border = JBUI.Borders.empty(0, 4)
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
@@ -90,33 +93,26 @@ class CopilotQuotaStatusBarWidget(
 
     private fun updateLabel(result: PluginService.QuotaResult) {
         label.text = when (result) {
-            is PluginService.QuotaResult.Loading   -> "⊙ Copilot"
-            is PluginService.QuotaResult.Available -> "⊙ ${result.quota.remaining}/${result.quota.total}"
-            is PluginService.QuotaResult.Unlimited -> "⊙ Copilot ∞"
-            is PluginService.QuotaResult.NoAccount -> "⊙ Copilot — Accedi"
-            is PluginService.QuotaResult.Error     -> "⊙ Copilot ✗"
+            is PluginService.QuotaResult.Loading   -> MESSAGES.getString("widget_initial")
+            is PluginService.QuotaResult.Available -> MessageFormat.format(MESSAGES.getString("widget_available"), result.quota.remaining, result.quota.total)
+            is PluginService.QuotaResult.Unlimited -> MESSAGES.getString("widget_unlimited")
+            is PluginService.QuotaResult.NoAccount -> MESSAGES.getString("widget_signin")
+            is PluginService.QuotaResult.Error     -> MESSAGES.getString("widget_error")
         }
         label.toolTipText = when (result) {
             is PluginService.QuotaResult.Loading ->
-                "Quota Copilot Premium — caricamento…"
+                MESSAGES.getString("tooltip_loading")
 
             is PluginService.QuotaResult.Available -> {
                 val q = result.quota
-                "<html>Copilot Premium<br>" +
-                "Disponibile: <b>${q.remaining} / ${q.total}</b><br>" +
-                "Utilizzato: ${q.used} (${String.format("%.1f", q.percentUsed)}%)<br>" +
-                "<i>Clicca per opzioni</i></html>"
+                MessageFormat.format(MESSAGES.getString("tooltip_available_html"), q.remaining, q.total, q.used, String.format("%.1f", q.percentUsed))
             }
 
-            is PluginService.QuotaResult.Unlimited ->
-                "Copilot Premium: quota illimitata"
+            is PluginService.QuotaResult.Unlimited -> MESSAGES.getString("tooltip_unlimited")
 
-            is PluginService.QuotaResult.NoAccount ->
-                "<html>Copilot — ⚠ Non autenticato.<br>" +
-                "<i>Clicca per accedere.</i></html>"
+            is PluginService.QuotaResult.NoAccount -> MESSAGES.getString("tooltip_noaccount_html")
 
-            is PluginService.QuotaResult.Error ->
-                "Copilot — ✗ Errore: ${result.message}"
+            is PluginService.QuotaResult.Error -> MessageFormat.format(MESSAGES.getString("tooltip_error"), result.message)
         }
     }
 
@@ -158,7 +154,7 @@ class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
 /**
  * Action: force an immediate quota refresh.
  */
-class RefreshAction : AnAction("Aggiorna") {
+class RefreshAction : AnAction(MESSAGES.getString("action_refresh")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         PluginService.getInstance().refreshQuota()
@@ -168,7 +164,7 @@ class RefreshAction : AnAction("Aggiorna") {
 /**
  * Action: sign in via GitHub OAuth Device Flow.
  */
-class SignInAction(private val project: Project) : AnAction("Accedi con GitHub") {
+class SignInAction(private val project: Project) : AnAction(MESSAGES.getString("action_signin")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         ApplicationManager.getApplication().executeOnPooledThread {
@@ -192,8 +188,8 @@ class SignInAction(private val project: Project) : AnAction("Accedi con GitHub")
                 ApplicationManager.getApplication().invokeLater {
                     JOptionPane.showMessageDialog(
                         null,
-                        "Impossibile avviare l'autenticazione:\n${ex.message}",
-                        "Errore accesso GitHub",
+                        MessageFormat.format(MESSAGES.getString("dialog_auth_error_msg"), ex.message),
+                        MESSAGES.getString("dialog_auth_error_title"),
                         JOptionPane.ERROR_MESSAGE
                     )
                 }
@@ -205,22 +201,22 @@ class SignInAction(private val project: Project) : AnAction("Accedi con GitHub")
 /**
  * Action: sign out and clear stored credentials.
  */
-class SignOutAction : AnAction("Disconnetti") {
+class SignOutAction : AnAction(MESSAGES.getString("action_signout")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         val auth = AuthService.getInstance()
         val username = auth.getSavedUsername()
-        val msg = if (username != null) "Disconnettere \"$username\"?" else "Disconnettere l'account?"
+        val msg = if (username != null) MessageFormat.format(MESSAGES.getString("signout_confirm_when_username"), username) else MESSAGES.getString("signout_confirm_no_username")
 
         if (JOptionPane.showConfirmDialog(
-                null, msg, "Disconnessione GitHub", JOptionPane.YES_NO_OPTION
+                null, msg, MESSAGES.getString("signout_title"), JOptionPane.YES_NO_OPTION
             ) == JOptionPane.YES_OPTION
         ) {
             auth.clearAuthentication()
             JOptionPane.showMessageDialog(
                 null,
-                "Disconnessione completata.",
-                "Disconnessione GitHub",
+                MESSAGES.getString("signout_complete"),
+                MESSAGES.getString("signout_title"),
                 JOptionPane.INFORMATION_MESSAGE
             )
             PluginService.getInstance().refreshQuota()

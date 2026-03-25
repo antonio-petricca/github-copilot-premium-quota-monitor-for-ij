@@ -3,6 +3,8 @@ package com.github.intellij.plugins.github_copilot_quota_monitor.ui
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import java.text.MessageFormat
+import java.util.*
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
@@ -31,6 +33,7 @@ class DeviceAuthFlowDialog(
 
     companion object {
         private val LOG = Logger.getInstance(DeviceAuthFlowDialog::class.java)
+        private val MESSAGES: ResourceBundle = ResourceBundle.getBundle("messages")
     }
 
     private val authService = AuthService.getInstance()
@@ -43,9 +46,9 @@ class DeviceAuthFlowDialog(
     private var pollingThread: Thread? = null
 
     init {
-        title = "Accedi a GitHub Copilot"
-        setCancelButtonText("Annulla")
-        setOKButtonText("Conferma")
+        title = MESSAGES.getString("dialog_title")
+        setCancelButtonText(MESSAGES.getString("button_cancel"))
+        setOKButtonText(MESSAGES.getString("button_ok"))
         init()
         window?.isAlwaysOnTop = true
         // Start polling for authentication in background
@@ -91,25 +94,25 @@ class DeviceAuthFlowDialog(
 
     override fun createCenterPanel(): JComponent {
         val root = JPanel(BorderLayout(0, 16))
-        root.border = JBUI.Borders.empty(24)
+        root.border = JBUI.Borders.emptyTop(24)
         root.preferredSize = Dimension(580, 280)
 
         // Title section
-        val headerLabel = JBLabel("Autenticazione copilot")
+        val headerLabel = JBLabel(MESSAGES.getString("dialog_header"))
         headerLabel.font = headerLabel.font.deriveFont(Font.BOLD, 14f)
         root.add(headerLabel, BorderLayout.NORTH)
 
         // Content with steps
         val contentPanel = JPanel()
         contentPanel.layout = BoxLayout(contentPanel, BoxLayout.Y_AXIS)
-        contentPanel.border = JBUI.Borders.empty(16, 0, 0, 0)
+        contentPanel.border = JBUI.Borders.emptyTop(16)
 
         // Step 1: URL
-        contentPanel.add(JBLabel("1. Apri nel browser"))
+        contentPanel.add(JBLabel(MESSAGES.getString("step1")))
         contentPanel.add(Box.createVerticalStrut(8))
         val urlField = JTextField(response.verificationUri)
         urlField.isEditable = false
-        val openBrowserBtn = JButton("Apri URL")
+        val openBrowserBtn = JButton(MESSAGES.getString("open_url"))
         openBrowserBtn.addActionListener { openBrowser() }
         val urlPanel = JPanel(BorderLayout(8, 0))
         urlPanel.add(urlField, BorderLayout.CENTER)
@@ -118,13 +121,13 @@ class DeviceAuthFlowDialog(
         contentPanel.add(Box.createVerticalStrut(16))
 
         // Step 2: Code
-        contentPanel.add(JBLabel("2. Inserisci il codice su GitHub"))
+        contentPanel.add(JBLabel(MESSAGES.getString("step2")))
         contentPanel.add(Box.createVerticalStrut(8))
         val codeLabel = JBLabel(response.userCode)
         codeLabel.font = Font(Font.MONOSPACED, Font.BOLD, 24)
         codeLabel.horizontalAlignment = SwingConstants.CENTER
         codeLabel.border = JBUI.Borders.empty(12)
-        val copyBtn = JButton("Copia")
+        val copyBtn = JButton(MESSAGES.getString("copy"))
         copyBtn.addActionListener {
             CopyPasteManager.getInstance().setContents(StringSelection(response.userCode))
         }
@@ -136,7 +139,7 @@ class DeviceAuthFlowDialog(
         contentPanel.add(Box.createVerticalStrut(16))
 
         // Status label
-        statusLabel = JBLabel("In attesa di autorizzazione…")
+        statusLabel = JBLabel(MESSAGES.getString("waiting_auth"))
         statusLabel!!.font = statusLabel!!.font.deriveFont(Font.PLAIN, 10f)
         statusLabel!!.horizontalAlignment = SwingConstants.CENTER
         contentPanel.add(statusLabel)
@@ -171,21 +174,21 @@ class DeviceAuthFlowDialog(
                         }
                         is AuthService.PollResult.Pending  -> { /* keep polling */ }
                         is AuthService.PollResult.Expired  -> {
-                            updateStatus("Codice scaduto. Riavvia l'accesso.")
+                            updateStatus(MESSAGES.getString("code_expired"))
                             return@Thread
                         }
                         is AuthService.PollResult.Error    -> {
-                            updateStatus("Errore: ${r.message}")
+                            updateStatus(MessageFormat.format(MESSAGES.getString("error_with_message"), r.message))
                             return@Thread
                         }
                     }
                 } catch (e: Exception) {
                     LOG.warn("Errore polling", e)
-                    updateStatus("Errore di rete: ${e.message}")
+                    updateStatus(MessageFormat.format(MESSAGES.getString("network_error_prefix"), e.message))
                     return@Thread
                 }
             }
-            updateStatus("Codice scaduto. Riavvia l'accesso.")
+            updateStatus(MESSAGES.getString("code_expired"))
         }.also {
             it.isDaemon = true
             it.start()

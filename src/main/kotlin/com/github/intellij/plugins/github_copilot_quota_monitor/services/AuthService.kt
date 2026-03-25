@@ -7,6 +7,8 @@ import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import java.text.MessageFormat
+import java.util.*
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URI
@@ -27,6 +29,7 @@ class AuthService {
 
     companion object {
         private val LOG = Logger.getInstance(AuthService::class.java)
+        private val MESSAGES: ResourceBundle = ResourceBundle.getBundle("messages")
 
         /**
          * OAuth App client ID used for the Device Flow.
@@ -114,12 +117,12 @@ class AuthService {
     fun requestDeviceCode(): DeviceCodeResponse {
         val conn = post(DEVICE_CODE_URL, "client_id=${enc(CLIENT_ID)}&scope=${enc(SCOPE)}")
         val code = conn.responseCode
-        if (code != 200) throw RuntimeException("GitHub returned HTTP $code for device-code request")
+        if (code != 200) throw RuntimeException(MessageFormat.format(MESSAGES.getString("device_code_http_error"), code))
 
         val json = JsonParser.parseString(conn.inputStream.bufferedReader().readText()).asJsonObject
         return DeviceCodeResponse(
-            deviceCode    = json["device_code"]?.asString    ?: error("Missing device_code in response"),
-            userCode      = json["user_code"]?.asString      ?: error("Missing user_code in response"),
+            deviceCode    = json["device_code"]?.asString    ?: error(MESSAGES.getString("missing_device_code")),
+            userCode      = json["user_code"]?.asString      ?: error(MESSAGES.getString("missing_user_code")),
             verificationUri = json["verification_uri"]?.asString ?: "https://github.com/login/device",
             interval      = json["interval"]?.asInt  ?: 5,
             expiresIn     = json["expires_in"]?.asInt ?: 900
@@ -137,7 +140,7 @@ class AuthService {
                        "&device_code=${enc(deviceCode)}" +
                        "&grant_type=${enc("urn:ietf:params:oauth:grant-type:device_code")}"
             val conn = post(ACCESS_TOKEN_URL, body)
-            if (conn.responseCode != 200) return PollResult.Error("HTTP ${conn.responseCode}")
+            if (conn.responseCode != 200) return PollResult.Error(MessageFormat.format(MESSAGES.getString("poll_http_error"), conn.responseCode))
 
             val json = JsonParser.parseString(conn.inputStream.bufferedReader().readText()).asJsonObject
             val token = json["access_token"]?.asString
@@ -146,11 +149,11 @@ class AuthService {
             when (json["error"]?.asString) {
                 "authorization_pending", "slow_down" -> PollResult.Pending
                 "expired_token"                       -> PollResult.Expired
-                else -> PollResult.Error(json["error_description"]?.asString ?: "Unknown error")
+                else -> PollResult.Error(json["error_description"]?.asString ?: MESSAGES.getString("unknown_error"))
             }
         } catch (e: Exception) {
             LOG.warn("Device-flow poll error", e)
-            PollResult.Error(e.message ?: "Network error")
+            PollResult.Error(e.message ?: MESSAGES.getString("network_error"))
         }
     }
 

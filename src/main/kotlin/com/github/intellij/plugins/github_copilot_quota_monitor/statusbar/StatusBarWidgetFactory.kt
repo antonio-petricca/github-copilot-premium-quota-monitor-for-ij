@@ -5,6 +5,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.openapi.wm.StatusBarWidgetFactory
+import java.util.*
 
 /**
  * Factory that registers [CopilotQuotaStatusBarWidget] with IntelliJ's
@@ -14,7 +15,9 @@ class StatusBarWidgetFactory : StatusBarWidgetFactory {
 
     override fun getId(): String = CopilotQuotaStatusBarWidget.WIDGET_ID
 
-    override fun getDisplayName(): String = "Quota Copilot Premium"
+    private val MESSAGES: ResourceBundle = ResourceBundle.getBundle("messages")
+
+    override fun getDisplayName(): String = MESSAGES.getString("display_name")
 
     override fun isAvailable(project: Project): Boolean = true
 

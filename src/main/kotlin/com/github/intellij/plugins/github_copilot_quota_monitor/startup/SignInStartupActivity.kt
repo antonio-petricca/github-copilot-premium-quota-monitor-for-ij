@@ -4,6 +4,7 @@ import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthSer
 import com.github.intellij.plugins.github_copilot_quota_monitor.ui.DeviceAuthFlowDialog
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import java.util.*
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import javax.swing.JOptionPane
@@ -18,6 +19,7 @@ class SignInStartupActivity : ProjectActivity {
 
     companion object {
         private val LOG = Logger.getInstance(SignInStartupActivity::class.java)
+        private val MESSAGES: ResourceBundle = ResourceBundle.getBundle("messages")
     }
 
     override suspend fun execute(project: Project) {
@@ -43,12 +45,12 @@ class SignInStartupActivity : ProjectActivity {
             } catch (e: Exception) {
                 LOG.warn("Failed to initiate sign-in flow", e)
                 ApplicationManager.getApplication().invokeLater {
-                    JOptionPane.showMessageDialog(
-                        null,
-                        "Failed to start the sign-in flow:\n${e.message}",
-                        "GitHub Copilot Authentication",
-                        JOptionPane.INFORMATION_MESSAGE
-                    )
+                        JOptionPane.showMessageDialog(
+                                null,
+                                MessageFormat.format(MESSAGES.getString("startup_fail_msg"), e.message),
+                                MESSAGES.getString("startup_fail_title"),
+                                JOptionPane.INFORMATION_MESSAGE
+                            )
                 }
             }
         }
