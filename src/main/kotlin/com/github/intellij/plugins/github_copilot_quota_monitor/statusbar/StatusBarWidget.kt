@@ -18,8 +18,7 @@ import com.intellij.util.ui.JBUI
 import java.awt.Point
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.text.MessageFormat
-import java.util.*
+// ...existing code...
 import com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages
 import javax.swing.JComponent
 import javax.swing.JLabel
@@ -148,7 +147,9 @@ class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
 
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
         val auth = AuthService.getInstance()
-        val authAction: AnAction = if (auth.isAuthenticated()) SignOutAction() else SignInAction(project)
+        // Use non-blocking cached check to avoid calling PasswordSafe from inside
+        // read actions / UI update code which may be executed under read lock.
+        val authAction: AnAction = if (auth.isAuthenticatedCached()) SignOutAction() else SignInAction(project)
         return arrayOf(RefreshAction(), authAction)
     }
 }

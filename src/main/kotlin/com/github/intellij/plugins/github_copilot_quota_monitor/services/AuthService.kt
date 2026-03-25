@@ -7,7 +7,8 @@ import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import java.text.MessageFormat
+import com.intellij.openapi.application.ApplicationManager
+import java.util.concurrent.atomic.AtomicReference
 import java.util.*
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
@@ -29,8 +30,6 @@ class AuthService {
 
     companion object {
         private val LOG = Logger.getInstance(AuthService::class.java)
-        private val MESSAGES: ResourceBundle = ResourceBundle.getBundle("messages")
-
         /**
          * OAuth App client ID used for the Device Flow.
          * This is the publicly documented client ID for GitHub Copilot IDE integrations.
@@ -59,6 +58,21 @@ class AuthService {
         fun getInstance(): AuthService = service()
     }
 
+    init {
+        // Load cached credentials in background to avoid blocking read actions/UI.
+        ApplicationManager.getApplication().executeOnPooledThread {
+            try {
+                val token = PasswordSafe.instance.getPassword(TOKEN_ATTRS)
+                cachedToken.set(token)
+                val username = PasswordSafe.instance.getPassword(USERNAME_ATTRS)
+                cachedUsername.set(username)
+                LOG.info("[CopilotQuotaMonitor] Loaded cached credentials: token=${if (token != null) "present" else "null"}, username=${username}")
+            } catch (e: Exception) {
+                LOG.warn("Failed to load cached credentials", e)
+            }
+        }
+    }
+
     // ── Domain types ──────────────────────────────────────────────────────────
 
     data class DeviceCodeResponse(
@@ -78,15 +92,28 @@ class AuthService {
 
     // ── Token store ───────────────────────────────────────────────────────────
 
+    // In-memory cached values used by UI code that runs inside read actions and
+    // therefore must not perform blocking operations (PasswordSafe access can be
+    // slow / platform-dependent). These are kept up-to-date when tokens are
+    // saved/cleared and are initially loaded in background in the init block.
+    private val cachedToken = AtomicReference<String?>(null)
+    private val cachedUsername = AtomicReference<String?>(null)
+
     fun getToken(): String? {
         val token = PasswordSafe.instance.getPassword(TOKEN_ATTRS)
         LOG.info("[CopilotQuotaMonitor] getToken: token is ${if (token != null) "present" else "null"}")
+        // Keep cache in sync for callers that must not perform blocking IO
+        cachedToken.set(token)
         return token
     }
 
+    /** Non-blocking check for use by UI code that runs under read actions. */
     fun isAuthenticated(): Boolean = getToken() != null
 
-    fun getSavedUsername(): String? = PasswordSafe.instance.getPassword(USERNAME_ATTRS)
+    /** Cached, non-blocking username accessor for use from UI/read actions. */
+    fun isAuthenticatedCached(): Boolean = cachedToken.get() != null
+
+    fun getSavedUsername(): String? = cachedUsername.get()
 
     /**
      * Persists [token] and fetches + caches the associated GitHub username.
@@ -94,16 +121,29 @@ class AuthService {
      */
     fun saveAuthentication(token: String) {
         LOG.info("[CopilotQuotaMonitor] saveAuthentication: saving token")
+        // Update in-memory cache immediately so UI code can observe auth state
+        cachedToken.set(token)
         PasswordSafe.instance.setPassword(TOKEN_ATTRS, token)
         val username = fetchUsername(token)
         LOG.info("[CopilotQuotaMonitor] saveAuthentication: fetched username = $username")
+        cachedUsername.set(username)
         PasswordSafe.instance.setPassword(USERNAME_ATTRS, username)
     }
 
     /** Removes the stored token and username. */
     fun clearAuthentication() {
-        PasswordSafe.instance.setPassword(TOKEN_ATTRS, null)
-        PasswordSafe.instance.setPassword(USERNAME_ATTRS, null)
+        // Clear in-memory cache first
+        cachedToken.set(null)
+        cachedUsername.set(null)
+        // Perform actual PasswordSafe writes off the EDT to avoid slow blocking
+        ApplicationManager.getApplication().executeOnPooledThread {
+            try {
+                PasswordSafe.instance.setPassword(TOKEN_ATTRS, null)
+                PasswordSafe.instance.setPassword(USERNAME_ATTRS, null)
+            } catch (e: Exception) {
+                LOG.warn("Failed to clear credentials from PasswordSafe", e)
+            }
+        }
     }
 
     // ── Device Flow ───────────────────────────────────────────────────────────
