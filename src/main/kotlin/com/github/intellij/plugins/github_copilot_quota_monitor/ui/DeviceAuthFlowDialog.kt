@@ -2,14 +2,18 @@ package com.github.intellij.plugins.github_copilot_quota_monitor.ui
 
 import com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Component
 import java.awt.Desktop
 import java.awt.Dimension
@@ -17,15 +21,31 @@ import java.awt.Font
 import java.awt.datatransfer.StringSelection
 import java.net.URI
 import javax.swing.*
+import javax.swing.border.CompoundBorder
 
 /**
  * Modal dialog that guides the user through the GitHub OAuth Device Flow.
  *
- * - Displays the device code and verification URL for the user to enter on GitHub.
- * - Opens the browser automatically.
- * - Polls GitHub in a background daemon thread and closes itself on success.
+ * Layout:
+ * ```
+ * ┌─────────────────────────────────────────────────┐
+ * │  GitHub Copilot Authentication                  │
+ * │  Complete the steps below to authorize…         │
+ * │ ───────────────────────────────────────���─────   │
+ * │  1.  Copy and enter this one-time code…         │
+ * │  ┌──────────────────────────────────────────┐   │
+ * │  │  ABCD-EFGH                  [Copy Code]  │   │
+ * │  └──────────────────────────────────────────┘   │
+ * │  2.  Open the GitHub authorization page…        │
+ * │  ┌──────────────────────────────────────────┐   │
+ * │  │  github.com/login/device  [Open Browser] │   │
+ * │  └──────────────────────────────────────────┘   │
+ * │  ⏳ Waiting for authorization…          14:59   │
+ * └─────────────────────────────────────────────────┘
+ * ```
  *
- * Check [authenticated] after [show] returns to determine whether sign-in succeeded.
+ * - Polls GitHub in a background daemon thread; closes itself on success.
+ * - Check [authenticated] after [show] returns.
  */
 class DeviceAuthFlowDialog(
     project: Project?,
@@ -34,6 +54,11 @@ class DeviceAuthFlowDialog(
 
     companion object {
         private val LOG = Logger.getInstance(DeviceAuthFlowDialog::class.java)
+
+        private const val COPY_FEEDBACK_DELAY_MS = 2_000
+
+        /** Theme-aware background for code / URL cards. */
+        private val CARD_BG = JBColor(Color(0xF3F4F6), Color(0x2B2D30))
     }
 
     private val authService = AuthService.getInstance()
@@ -42,93 +67,196 @@ class DeviceAuthFlowDialog(
     var authenticated: Boolean = false
         private set
 
+    // ── Mutable UI state ──────────────────────────────────────────────────────
+
     private var statusLabel: JBLabel? = null
+    private var countdownLabel: JBLabel? = null
+    private var secondsRemaining = response.expiresIn
 
     @Volatile
     private var pollingThread: Thread? = null
+
+    /**
+     * Swing timer that decrements the countdown every second on the EDT.
+     * Started after [init] to ensure [countdownLabel] has been created.
+     */
+    private val countdownTimer = Timer(1_000) {
+        secondsRemaining = (secondsRemaining - 1).coerceAtLeast(0)
+        countdownLabel?.text = formatCountdown(secondsRemaining)
+    }.apply { isRepeats = true }
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     init {
         title = Messages.get("deviceauth_dialog_title")
         setCancelButtonText(Messages.get("deviceauth_button_cancel"))
         setOKButtonText(Messages.get("deviceauth_button_ok"))
-        init()
+        init() // builds the UI — must come before startPolling / countdownTimer
         window?.isAlwaysOnTop = false
         startPolling()
+        countdownTimer.start()
     }
 
-    // ── UI ────────────────────────────────────────────────────────────────────
+    // ── UI construction ───────────────────────────────────────────────────────
 
-    override fun createCenterPanel(): JComponent {
-        val root = JPanel(BorderLayout(0, 16)).apply {
-            border = JBUI.Borders.emptyTop(24)
-            preferredSize = Dimension(580, 280)
+    override fun createCenterPanel(): JComponent =
+        JPanel(BorderLayout(0, JBUI.scale(16))).apply {
+            border = JBUI.Borders.empty(24, 24, 8, 24)
+            preferredSize = Dimension(JBUI.scale(560), JBUI.scale(330))
+            add(buildHeader(), BorderLayout.NORTH)
+            add(buildSteps(),  BorderLayout.CENTER)
         }
 
-        val headerLabel = JBLabel(Messages.get("deviceauth_dialog_header")).apply {
-            font = font.deriveFont(Font.BOLD, 14f)
-        }
-        root.add(headerLabel, BorderLayout.NORTH)
-
-        val contentPanel = JPanel().apply {
+    /** Header: bold title + subtitle + horizontal divider. */
+    private fun buildHeader(): JComponent =
+        JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
-            border = JBUI.Borders.emptyTop(16)
+            isOpaque = false
+
+            add(JBLabel(Messages.get("deviceauth_dialog_header")).apply {
+                font = font.deriveFont(Font.BOLD, 15.0f)
+                alignmentX = Component.LEFT_ALIGNMENT
+            })
+            add(Box.createVerticalStrut(JBUI.scale(4)))
+            add(JBLabel(Messages.get("deviceauth_dialog_subtitle")).apply {
+                font = font.deriveFont(Font.PLAIN, 12.0f)
+                foreground = UIUtil.getContextHelpForeground()
+                alignmentX = Component.LEFT_ALIGNMENT
+            })
+            add(Box.createVerticalStrut(JBUI.scale(16)))
+            add(JSeparator().apply {
+                alignmentX  = Component.LEFT_ALIGNMENT
+                maximumSize = Dimension(Int.MAX_VALUE, 1)
+            })
         }
 
-        // ── Step 1: enter the code ────────────────────────────────────────────
-        contentPanel.add(leftAligned(JBLabel(Messages.get("deviceauth_step2"))))
-        contentPanel.add(Box.createVerticalStrut(8))
+    /** Body: two numbered steps + status/countdown row. */
+    private fun buildSteps(): JComponent =
+        JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+            isOpaque = false
 
-        val codeLabel = JBLabel(response.userCode).apply {
-            font = Font(Font.MONOSPACED, Font.BOLD, 24)
-            horizontalAlignment = SwingConstants.LEFT
-            alignmentX = Component.LEFT_ALIGNMENT
-            border = JBUI.Borders.empty(12)
-        }
-        val copyBtn = JButton(Messages.get("deviceauth_copy")).apply {
-            addActionListener {
-                CopyPasteManager.getInstance().setContents(StringSelection(response.userCode))
-            }
-        }
-        val codePanel = JPanel(BorderLayout(12, 0)).apply {
-            border = JBUI.Borders.empty(8)
-            alignmentX = Component.LEFT_ALIGNMENT
-            maximumSize = Dimension(Int.MAX_VALUE, codeLabel.preferredSize.height + 24)
-            add(codeLabel, BorderLayout.CENTER)
-            add(copyBtn,   BorderLayout.EAST)
-        }
-        contentPanel.add(codePanel)
-        contentPanel.add(Box.createVerticalStrut(16))
+            add(Box.createVerticalStrut(JBUI.scale(16)))
 
-        // ── Step 2: open the browser ──────────────────────────────────────────
-        contentPanel.add(leftAligned(JBLabel(Messages.get("deviceauth_step1"))))
-        contentPanel.add(Box.createVerticalStrut(8))
+            // Step 1 ── copy the one-time code
+            add(stepHeading(1, Messages.get("deviceauth_step2")))
+            add(Box.createVerticalStrut(JBUI.scale(8)))
+            add(buildCodeCard())
+            add(Box.createVerticalStrut(JBUI.scale(16)))
 
-        val urlField = JTextField(response.verificationUri).apply {
-            isEditable = false
+            // Step 2 ── open browser and paste the code
+            add(stepHeading(2, Messages.get("deviceauth_step1")))
+            add(Box.createVerticalStrut(JBUI.scale(8)))
+            add(buildUrlCard())
+            add(Box.createVerticalStrut(JBUI.scale(14)))
+
+            // Status row
+            add(buildStatusRow())
+        }
+
+    /**
+     * Numbered step heading, e.g. "**1.** Copy and enter this one-time code…"
+     * Uses HTML so the step number can be bold without affecting the rest.
+     */
+    private fun stepHeading(number: Int, text: String): JBLabel =
+        JBLabel("<html><b>$number.</b>&nbsp; $text</html>").apply {
+            font = font.deriveFont(Font.PLAIN, 12.0f)
+            alignmentX  = Component.LEFT_ALIGNMENT
             maximumSize = Dimension(Int.MAX_VALUE, preferredSize.height)
         }
-        val openBrowserBtn = JButton(Messages.get("deviceauth_open_url")).apply {
+
+    /**
+     * Card that shows the device code in a large monospaced font
+     * with a "Copy Code" button on the right.
+     * Provides brief visual feedback ("✓ Copied!") after copying.
+     */
+    private fun buildCodeCard(): JPanel {
+        val codeLabel = JBLabel(response.userCode).apply {
+            font = Font(Font.MONOSPACED, Font.BOLD, JBUI.scale(22))
+            horizontalAlignment = SwingConstants.LEFT
+            isOpaque = false
+        }
+
+        val copyButton = JButton(Messages.get("deviceauth_copy")).apply {
+            icon         = AllIcons.Actions.Copy
+            isFocusable  = false
+            addActionListener { handleCopy(this) }
+        }
+
+        return card(JBUI.scale(12), JBUI.scale(16)).apply {
+            maximumSize = Dimension(Int.MAX_VALUE, JBUI.scale(56))
+            add(codeLabel,  BorderLayout.CENTER)
+            add(copyButton, BorderLayout.EAST)
+        }
+    }
+
+    /**
+     * Card that shows the verification URL with an "Open in Browser" button.
+     */
+    private fun buildUrlCard(): JPanel {
+        val urlLabel = JBLabel(response.verificationUri).apply {
+            font       = font.deriveFont(Font.PLAIN, 12.0f)
+            isOpaque   = false
+        }
+
+        val openButton = JButton(Messages.get("deviceauth_open_url")).apply {
+            icon        = AllIcons.Ide.External_link_arrow
+            isFocusable = false
             addActionListener { openBrowser() }
         }
-        val urlPanel = JPanel(BorderLayout(8, 0)).apply {
-            alignmentX = Component.LEFT_ALIGNMENT
-            maximumSize = Dimension(Int.MAX_VALUE, urlField.preferredSize.height + 8)
-            add(urlField,       BorderLayout.CENTER)
-            add(openBrowserBtn, BorderLayout.EAST)
-        }
-        contentPanel.add(urlPanel)
-        contentPanel.add(Box.createVerticalStrut(16))
 
-        // ── Status ────────────────────────────────────────────────────────────
+        return card(JBUI.scale(8), JBUI.scale(16)).apply {
+            maximumSize = Dimension(Int.MAX_VALUE, JBUI.scale(40))
+            add(urlLabel,   BorderLayout.CENTER)
+            add(openButton, BorderLayout.EAST)
+        }
+    }
+
+    /** Status text on the left, countdown on the right. */
+    private fun buildStatusRow(): JPanel {
         statusLabel = JBLabel(Messages.get("deviceauth_waiting_auth")).apply {
-            font = font.deriveFont(Font.PLAIN, 10f)
-            horizontalAlignment = SwingConstants.CENTER
+            icon       = AllIcons.Process.ProgressResume
+            font       = font.deriveFont(Font.PLAIN, 11.0f)
+            foreground = UIUtil.getContextHelpForeground()
         }
-        contentPanel.add(statusLabel)
-        contentPanel.add(Box.createVerticalGlue())
+        countdownLabel = JBLabel(formatCountdown(secondsRemaining)).apply {
+            font       = font.deriveFont(Font.PLAIN, 11.0f)
+            foreground = UIUtil.getContextHelpForeground()
+        }
 
-        root.add(contentPanel, BorderLayout.CENTER)
-        return root
+        return JPanel(BorderLayout()).apply {
+            isOpaque    = false
+            alignmentX  = Component.LEFT_ALIGNMENT
+            maximumSize = Dimension(Int.MAX_VALUE, JBUI.scale(20))
+            add(statusLabel!!,   BorderLayout.WEST)
+            add(countdownLabel!!, BorderLayout.EAST)
+        }
+    }
+
+    /**
+     * Creates a themed card panel (rounded border + inset padding).
+     * [vPad] and [hPad] are already scaled values.
+     */
+    private fun card(vPad: Int, hPad: Int): JPanel =
+        JPanel(BorderLayout(JBUI.scale(12), 0)).apply {
+            background  = CARD_BG
+            border      = CompoundBorder(
+                JBUI.Borders.customLine(JBColor.border(), 1),
+                JBUI.Borders.empty(vPad, hPad),
+            )
+            alignmentX  = Component.LEFT_ALIGNMENT
+        }
+
+    // ── Copy feedback ─────────────────────────────────────────────────────────
+
+    private fun handleCopy(button: JButton) {
+        CopyPasteManager.getInstance().setContents(StringSelection(response.userCode))
+        button.text = Messages.get("deviceauth_copy_done")
+        button.icon = AllIcons.Actions.Commit
+        Timer(COPY_FEEDBACK_DELAY_MS) {
+            button.text = Messages.get("deviceauth_copy")
+            button.icon = AllIcons.Actions.Copy
+        }.also { it.isRepeats = false; it.start() }
     }
 
     // ── Polling ───────────────────────────────────────────────────────────────
@@ -150,40 +278,52 @@ class DeviceAuthFlowDialog(
                         is AuthService.PollResult.Success -> {
                             authService.saveAuthentication(r.token)
                             authenticated = true
-                            ApplicationManager.getApplication().invokeLater { close(OK_EXIT_CODE) }
+                            ApplicationManager.getApplication().invokeLater {
+                                countdownTimer.stop()
+                                close(OK_EXIT_CODE)
+                            }
                             return@Thread
                         }
                         is AuthService.PollResult.Pending -> { /* keep polling */ }
                         is AuthService.PollResult.Expired -> {
-                            updateStatus(Messages.get("deviceauth_code_expired"))
+                            updateStatus(Messages.get("deviceauth_code_expired"), error = true)
                             return@Thread
                         }
                         is AuthService.PollResult.Error -> {
-                            updateStatus(Messages.format("deviceauth_error_with_message", r.message))
+                            updateStatus(Messages.format("deviceauth_error_with_message", r.message), error = true)
                             return@Thread
                         }
                     }
                 } catch (e: Exception) {
                     LOG.warn("Polling error", e)
-                    updateStatus(Messages.format("deviceauth_network_error_prefix", e.message))
+                    updateStatus(Messages.format("deviceauth_network_error_prefix", e.message), error = true)
                     return@Thread
                 }
             }
-            updateStatus(Messages.get("deviceauth_code_expired"))
+            updateStatus(Messages.get("deviceauth_code_expired"), error = true)
         }.also {
             it.isDaemon = true
             it.start()
         }
     }
 
-    private fun updateStatus(text: String) {
-        ApplicationManager.getApplication().invokeLater { statusLabel?.text = text }
+    private fun updateStatus(text: String, error: Boolean = false) {
+        ApplicationManager.getApplication().invokeLater {
+            countdownTimer.stop()
+            statusLabel?.apply {
+                this.text      = text
+                this.icon      = if (error) AllIcons.General.Error else AllIcons.Process.ProgressResume
+                this.foreground = if (error) JBColor.RED else UIUtil.getContextHelpForeground()
+            }
+            countdownLabel?.text = ""
+        }
     }
 
     // ── Actions ───────────────────────────────────────────────────────────────
 
     override fun doCancelAction() {
         pollingThread?.interrupt()
+        countdownTimer.stop()
         super.doCancelAction()
     }
 
@@ -197,9 +337,9 @@ class DeviceAuthFlowDialog(
 
     // ── Utilities ─────────────────────────────────────────────────────────────
 
-    private fun <T : JLabel> leftAligned(label: T): T = label.apply {
-        horizontalAlignment = SwingConstants.LEFT
-        alignmentX = Component.LEFT_ALIGNMENT
-        maximumSize = Dimension(Int.MAX_VALUE, preferredSize.height)
+    private fun formatCountdown(seconds: Int): String {
+        val m = seconds / 60
+        val s = seconds % 60
+        return "$m:${s.toString().padStart(2, '0')}"
     }
 }
