@@ -194,16 +194,8 @@ class SignInAction(private val project: Project) : AnAction(Messages.get("status
                 ApplicationManager.getApplication().invokeLater {
                     val dlg = DeviceAuthFlowDialog(project, deviceCode)
                     dlg.show()
-                    // Force a refresh of the quota and the widget if present
-                    if (dlg.authenticated) {
-                        PluginService.getInstance().refreshQuota()
-                        val statusBar = com.intellij.openapi.wm.WindowManager.getInstance().getStatusBar(project)
-                        statusBar?.getWidget(CopilotQuotaStatusBarWidget.WIDGET_ID)?.let { widget ->
-                            if (widget is CopilotQuotaStatusBarWidget) {
-                                widget.refresh()
-                            }
-                        }
-                    }
+                    // No direct refresh needed: AuthService publishes auth state and
+                    // PluginService will refresh quota; widget listens to quota updates.
                 }
             } catch (ex: Exception) {
                 ApplicationManager.getApplication().invokeLater {
@@ -240,7 +232,7 @@ class SignOutAction : AnAction(Messages.get("statusbar_action_signout")) {
                 Messages.get("statusbar_signout_title"),
                 JOptionPane.INFORMATION_MESSAGE
             )
-            PluginService.getInstance().refreshQuota()
+            // PluginService will refresh the quota in response to auth state change
         }
     }
 }

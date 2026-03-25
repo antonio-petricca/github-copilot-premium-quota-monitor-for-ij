@@ -2,9 +2,7 @@ package com.github.intellij.plugins.github_copilot_quota_monitor.services
 
 import com.google.gson.JsonParser
 import com.intellij.openapi.application.ApplicationManager
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthStateNotifier
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthStateListener
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.QuotaNotifier
+// ...existing code... (same-package types used without import)
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import java.net.HttpURLConnection
