@@ -157,7 +157,7 @@ class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
 /**
  * Action: force an immediate quota refresh.
  */
-class RefreshAction : AnAction(Messages.get("action_refresh")) {
+class RefreshAction : AnAction(Messages.get("statusbar_action_refresh")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         PluginService.getInstance().refreshQuota()
@@ -167,7 +167,7 @@ class RefreshAction : AnAction(Messages.get("action_refresh")) {
 /**
  * Action: sign in via GitHub OAuth Device Flow.
  */
-class SignInAction(private val project: Project) : AnAction(Messages.get("action_signin")) {
+class SignInAction(private val project: Project) : AnAction(Messages.get("statusbar_action_signin")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         ApplicationManager.getApplication().executeOnPooledThread {
@@ -204,7 +204,7 @@ class SignInAction(private val project: Project) : AnAction(Messages.get("action
 /**
  * Action: sign out and clear stored credentials.
  */
-class SignOutAction : AnAction(Messages.get("action_signout")) {
+class SignOutAction : AnAction(Messages.get("statusbar_action_signout")) {
 
     override fun actionPerformed(e: AnActionEvent) {
         val auth = AuthService.getInstance()
