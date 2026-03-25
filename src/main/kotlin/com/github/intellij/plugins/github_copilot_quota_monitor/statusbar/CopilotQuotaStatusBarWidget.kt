@@ -184,15 +184,13 @@ class SignInAction(private val project: Project) : AnAction("Sign in with GitHub
                 ApplicationManager.getApplication().invokeLater {
                     val dlg = GitHubDeviceFlowDialog(project, deviceCode)
                     dlg.show()
-                    // Force a refresh of the quota after signin
+                    // Force un refresh globale e, se presente, anche del widget
                     if (dlg.authenticated) {
-                        CopilotQuotaService.getInstance().refreshAsync {
-                            // Aggiorna esplicitamente tutti i widget CopilotQuotaStatusBarWidget
-                            val statusBar = com.intellij.openapi.wm.WindowManager.getInstance().getStatusBar(project)
-                            statusBar?.getWidget(CopilotQuotaStatusBarWidget.WIDGET_ID)?.let { widget ->
-                                if (widget is CopilotQuotaStatusBarWidget) {
-                                    widget.refresh()
-                                }
+                        CopilotQuotaService.getInstance().refreshAsync()
+                        val statusBar = com.intellij.openapi.wm.WindowManager.getInstance().getStatusBar(project)
+                        statusBar?.getWidget(CopilotQuotaStatusBarWidget.WIDGET_ID)?.let { widget ->
+                            if (widget is CopilotQuotaStatusBarWidget) {
+                                widget.refresh()
                             }
                         }
                     }
