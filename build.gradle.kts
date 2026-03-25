@@ -11,7 +11,6 @@ val pluginGroup: String by project
 val pluginVersion: String by project
 val pluginName: String by project
 val pluginDescription: String by project
-val platformVersion: String by project
 val pluginSinceBuild: String by project
 val javaVersion: String by project
 val pluginChangeNotes: String by project
@@ -40,9 +39,9 @@ dependencies {
 
 intellijPlatform {
     pluginConfiguration {
+        ideaVersion {
         name        = pluginName
         description = pluginDescription
-        ideaVersion {
             sinceBuild = pluginSinceBuild
             // untilBuild is intentionally left unset to allow all future builds
         }
