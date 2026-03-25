@@ -1,19 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
     <!--
-        GitHub Mark (Invertocat) — dark-theme variant
-        Source: https://github.com/logos — fill adapted for IntelliJ plugin icon guidelines
+        GitHub Copilot icon — dark-theme variant
+        Robot face with visor eyes, based on GitHub Copilot visual identity
+        Uses GitHub's blue-on-dark palette (#58A6FF on #0D1117)
     -->
-    <path fill="#FFFFFF" fill-rule="evenodd" clip-rule="evenodd"
-          d="M20 0C8.954 0 0 8.954 0 20c0 8.837 5.728 16.334 13.672 18.977.999.184
-             1.364-.433 1.364-.966 0-.476-.018-2.063-.027-3.757-5.561 1.209-6.733-2.354
-             -6.733-2.354-.909-2.31-2.219-2.925-2.219-2.925-1.814-1.24.137-1.215.137
-             -1.215 2.005.141 3.06 2.059 3.06 2.059 1.783 3.054 4.678 2.172 5.817 1.661
-             .179-1.291.697-2.172 1.269-2.671-4.437-.505-9.101-2.219-9.101-9.875
-             0-2.181.779-3.966 2.058-5.365-.207-.506-.893-2.538.194-5.291 0 0
-             1.678-.537 5.496 2.049a19.14 19.14 0 0 1 5.002-.674c1.697.008 3.409.229
-             5.002.674 3.815-2.586 5.491-2.049 5.491-2.049 1.09 2.753.405 4.785.198
-             5.291 1.282 1.399 2.056 3.184 2.056 5.365 0 7.674-4.671 9.365-9.122 9.858
-             .717.617 1.356 1.836 1.356 3.699 0 2.671-.024 4.825-.024 5.483 0 .537.361
-             1.158 1.374.961C34.278 36.329 40 28.836 40 20 40 8.954 31.046 0 20 0Z"/>
+    <!-- Circular light-blue background (head) -->
+    <circle cx="20" cy="20" r="20" fill="#58A6FF"/>
+    <!-- Dark face / head inner area -->
+    <path fill="#0D1117"
+          d="M20 6C12.27 6 6 12.27 6 20c0 4.44 2.01 8.41 5.18 11.08
+             .67.56 1.4 1.06 2.17 1.48.25.14.51.27.77.39.54.25 1.1.46 1.68.63
+             .34.1.69.18 1.04.25C17.97 33.93 18.97 34 20 34s2.03-.07 2.96-.18
+             c.35-.07.7-.15 1.04-.25.58-.17 1.14-.38 1.68-.63.26-.12.52-.25.77-.39
+             .77-.42 1.5-.92 2.17-1.48C31.99 28.41 34 24.44 34 20 34 12.27 27.73 6 20 6Z"/>
+    <!-- Light-blue visor bar (covers both eyes) -->
+    <rect x="9" y="16" width="22" height="11" rx="5.5" fill="#58A6FF"/>
+    <!-- Dark eye sclera left -->
+    <circle cx="15" cy="21.5" r="3.5" fill="#0D1117"/>
+    <!-- Dark eye sclera right -->
+    <circle cx="25" cy="21.5" r="3.5" fill="#0D1117"/>
+    <!-- Light-blue pupil left -->
+    <circle cx="15" cy="21.5" r="1.7" fill="#58A6FF"/>
+    <!-- Light-blue pupil right -->
+    <circle cx="25" cy="21.5" r="1.7" fill="#58A6FF"/>
 </svg>
 
