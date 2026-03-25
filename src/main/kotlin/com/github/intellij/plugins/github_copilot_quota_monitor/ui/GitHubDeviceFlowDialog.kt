@@ -47,6 +47,8 @@ class GitHubDeviceFlowDialog(
         setCancelButtonText("Cancel")
         setOKButtonText("Done")
         init()
+        // Bring dialog to foreground
+        window?.isAlwaysOnTop = true
         openBrowser()
         startPolling()
     }
