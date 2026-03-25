@@ -62,7 +62,9 @@ class CopilotQuotaStatusBarWidget(
     private val label: JLabel = JLabel(Messages.get("statusbar_widget_initial")).apply {
         icon        = CopilotIcons.Logo
         iconTextGap = 4
-        font        = JBUI.Fonts.label()
+        // Use the smaller UI font for status bar widgets so the label matches
+        // the size of other status bar components.
+        font        = JBUI.Fonts.smallFont()
         border      = JBUI.Borders.empty(0, 4)
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
