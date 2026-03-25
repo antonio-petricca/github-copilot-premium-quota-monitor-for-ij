@@ -26,6 +26,8 @@ the current billing period.
 - **Auto-refresh** — quota is fetched in the background every **5 minutes**.
 - **On-demand refresh** — click the widget to force an immediate update.
 - **Tooltip** — hover the widget to see used, remaining, total, and percentage consumed.
+- **First-run setup** — sign-in dialog appears automatically on the first IDE run if not authenticated.
+- **Context menu** — right-click the widget to access sign-in/sign-out options.
 - **Standalone authentication** — implements the GitHub OAuth Device Flow (RFC 8628) directly,
   with no dependency on any other plugin.
 - **Secure token storage** — the OAuth token is kept in IntelliJ's built-in PasswordSafe
@@ -68,18 +70,21 @@ Search for **"GitHub Copilot Premium Quota Monitor"** in **Settings → Plugins 
 
 ## First-Time Setup
 
-After installing the plugin, you must sign in with your GitHub account once:
+After installing the plugin, a sign-in dialog appears automatically on the first IDE run if you 
+are not yet authenticated:
 
-1. Open **Settings → Tools → GitHub Copilot Quota Monitor**.
-2. Click **Sign in with GitHub**.
-3. A browser window opens automatically at `https://github.com/login/device`.
+1. The **GitHub Device Flow dialog** opens automatically showing a one-time code.
+2. A browser window opens automatically at `https://github.com/login/device`.
    If the browser does not open, copy the URL from the dialog and paste it manually.
-4. Enter the **one-time code** shown in the dialog (or click **Copy Code** first).
-5. Authorize the application on GitHub.
-6. The dialog closes automatically and the status bar widget starts showing your quota.
+3. Enter the **one-time code** shown in the dialog (or click **Copy Code** first).
+4. Authorize the application on GitHub.
+5. The dialog closes automatically and the status bar widget starts showing your quota.
 
-To revoke access, click **Sign out** in the same settings panel. You can re-authenticate at
-any time by clicking **Sign in with GitHub** again.
+If you dismiss the dialog or want to sign in later, you can always right-click the status bar widget 
+and select **Sign in with GitHub**.
+
+To revoke access, **right-click the widget** and select **Sign out**. You can re-authenticate at
+any time by right-clicking and selecting **Sign in with GitHub** again.
 
 ---
 
@@ -127,8 +132,7 @@ independently — no other plugin is required.
 
 ### Flow
 
-1. The user opens **Settings → Tools → GitHub Copilot Quota Monitor** and clicks
-   **Sign in with GitHub**.
+1. The user right-clicks the status bar widget and selects **Sign in with GitHub**.
 2. The plugin requests a device code from `https://github.com/login/device/code`.
 3. A dialog displays a one-time code and opens `https://github.com/login/device` in the browser.
 4. The plugin polls `https://github.com/login/oauth/access_token` in a background thread
@@ -142,7 +146,7 @@ independently — no other plugin is required.
 
 | Event | Behaviour |
 |---|---|
-| First use | Token is absent → status bar shows `⊙ Copilot ⚠`; tooltip guides to Settings |
+| First use | Token is absent → status bar shows `⊙ Copilot ⚠`; tooltip guides to right-click menu |
 | Token valid | Quota is fetched and cached for 5 minutes |
 | Token revoked / expired (HTTP 401 or 403) | Token is cleared automatically; user is prompted to sign in again via the tooltip |
 | Sign out | Token and username are removed from PasswordSafe immediately |
@@ -200,8 +204,8 @@ build/distributions/github-copilot-premium-quota-monitor-for-ij-<version>.zip
 ```
 
 This launches a sandboxed IntelliJ IDEA Community instance with the plugin pre-installed.
-Open **Settings → Tools → GitHub Copilot Quota Monitor** inside the sandbox and sign in to
-test the full authentication flow.
+Right-click the status bar widget and select **Sign in with GitHub** to test the full 
+authentication flow.
 
 ### Other useful tasks
 
@@ -222,10 +226,10 @@ src/main/kotlin/com/github/intellij/plugins/github_copilot_quota_monitor/
 │   └── CopilotQuotaService.kt          # Quota fetch, cache, JSON parsing
 ├── ui/
 │   └── GitHubDeviceFlowDialog.kt       # Modal dialog: shows user code, polls for token
-├── settings/
-│   └── CopilotQuotaConfigurable.kt     # Settings → Tools panel (sign in / sign out)
+├── startup/
+│   └── CopilotSignInStartupActivity.kt # Shows sign-in dialog on first IDE run
 └── statusbar/
-    ├── CopilotQuotaStatusBarWidget.kt   # Status bar widget (text + tooltip + click)
+    ├── CopilotQuotaStatusBarWidget.kt   # Status bar widget (text + tooltip + popup menu)
     └── CopilotQuotaStatusBarWidgetFactory.kt
 ```
 
@@ -240,5 +244,7 @@ src/main/kotlin/com/github/intellij/plugins/github_copilot_quota_monitor/
 | **Application-scoped services** | Quota data and auth state are IDE-wide; avoids duplicate network calls across multiple open projects |
 | **5-minute cache with atomic references** | Thread-safe, prevents API rate-limiting, no persistent background threads |
 | **Multi-layout JSON parser** | Handles `limited_user_quotas`, nested quota objects, and flat fields across GitHub API versions |
+| **Context menu over settings panel** | Sign in/out actions directly from the status bar widget; no need to navigate to Settings |
+| **First-run sign-in dialog** | Automates the initial setup flow; users can skip and sign in later via context menu |
 
 [rfc8628]: https://www.rfc-editor.org/rfc/rfc8628

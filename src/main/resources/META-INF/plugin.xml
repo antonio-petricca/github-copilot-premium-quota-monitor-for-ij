@@ -17,8 +17,7 @@
         The widget refreshes automatically every 5 minutes and on click.<br/>
         <br/>
         <b>First-time setup</b><br/>
-        Open <em>Settings → Tools → GitHub Copilot Quota Monitor</em> and click
-        <em>Sign in with GitHub</em> to authorize the plugin via the standard GitHub
+        Right-click the quota widget in the status bar and select <em>Sign in with GitHub</em> to authorize the plugin via the standard GitHub
         OAuth Device Flow (RFC 8628). No external plugin is required.<br/>
         <br/>
         <b>Requirements</b><br/>
@@ -51,12 +50,9 @@
             implementation="com.github.intellij.plugins.github_copilot_quota_monitor.statusbar.CopilotQuotaStatusBarWidgetFactory"
             order="first"/>
 
-        <!-- Settings panel: Settings → Tools → GitHub Copilot Quota Monitor -->
-        <applicationConfigurable
-            parentId="tools"
-            instance="com.github.intellij.plugins.github_copilot_quota_monitor.settings.CopilotQuotaConfigurable"
-            id="com.github.intellij.plugins.github_copilot_quota_monitor.settings"
-            displayName="GitHub Copilot Quota Monitor"/>
+        <!-- Startup activity: shows sign-in dialog on first run if not authenticated -->
+        <projectActivity
+            implementation="com.github.intellij.plugins.github_copilot_quota_monitor.startup.CopilotSignInStartupActivity"/>
 
     </extensions>
 </idea-plugin>
