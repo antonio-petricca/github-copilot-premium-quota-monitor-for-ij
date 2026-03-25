@@ -179,7 +179,12 @@ class SignInAction(private val project: Project) : AnAction("Sign in with GitHub
             try {
                 val deviceCode = GitHubAuthService.getInstance().requestDeviceCode()
                 ApplicationManager.getApplication().invokeLater {
-                    GitHubDeviceFlowDialog(project, deviceCode).show()
+                    val dlg = GitHubDeviceFlowDialog(project, deviceCode)
+                    dlg.show()
+                    // Force a refresh of the quota after signin
+                    if (dlg.authenticated) {
+                        CopilotQuotaService.getInstance().refreshAsync()
+                    }
                 }
             } catch (ex: Exception) {
                 ApplicationManager.getApplication().invokeLater {
@@ -216,6 +221,8 @@ class SignOutAction(private val project: Project) : AnAction("Sign out") {
                 "GitHub Sign-out",
                 JOptionPane.INFORMATION_MESSAGE
             )
+            // Force a refresh of the status bar to show "not signed in" state
+            CopilotQuotaService.getInstance().refreshAsync()
         }
     }
 }
