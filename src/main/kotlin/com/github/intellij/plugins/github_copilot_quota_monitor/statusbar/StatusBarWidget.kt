@@ -52,9 +52,10 @@ class CopilotQuotaStatusBarWidget(
     private var busConnection: MessageBusConnection? = null
 
     private val label: JLabel = JLabel(Messages.get("statusbar_widget_initial")).apply {
-        icon = CopilotIcons.Logo
+        icon        = CopilotIcons.Logo
         iconTextGap = 4
-        border = JBUI.Borders.empty(0, 4)
+        font        = JBUI.Fonts.label()
+        border      = JBUI.Borders.empty(0, 4)
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 if (SwingUtilities.isLeftMouseButton(e)) showPopupMenu()
