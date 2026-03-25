@@ -1,5 +1,6 @@
 package com.github.intellij.plugins.github_copilot_quota_monitor.statusbar
 
+import com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.StatusBar
@@ -15,9 +16,7 @@ class StatusBarWidgetFactory : StatusBarWidgetFactory {
 
     override fun getId(): String = CopilotQuotaStatusBarWidget.WIDGET_ID
 
-    private val MESSAGES: ResourceBundle = ResourceBundle.getBundle("messages")
-
-    override fun getDisplayName(): String = MESSAGES.getString("display_name")
+    override fun getDisplayName(): String = Messages.get("display_name")
 
     override fun isAvailable(project: Project): Boolean = true
 
