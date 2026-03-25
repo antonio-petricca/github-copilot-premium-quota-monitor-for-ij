@@ -14,7 +14,7 @@ class StatusBarWidgetFactory : StatusBarWidgetFactory {
 
     override fun getId(): String = CopilotQuotaStatusBarWidget.WIDGET_ID
 
-    override fun getDisplayName(): String = "GitHub Copilot Premium Quota"
+    override fun getDisplayName(): String = "Quota Copilot Premium"
 
     override fun isAvailable(project: Project): Boolean = true
 

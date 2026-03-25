@@ -93,30 +93,30 @@ class CopilotQuotaStatusBarWidget(
             is PluginService.QuotaResult.Loading   -> "⊙ Copilot"
             is PluginService.QuotaResult.Available -> "⊙ ${result.quota.remaining}/${result.quota.total}"
             is PluginService.QuotaResult.Unlimited -> "⊙ Copilot ∞"
-            is PluginService.QuotaResult.NoAccount -> "⊙ Copilot — Sign in"
+            is PluginService.QuotaResult.NoAccount -> "⊙ Copilot — Accedi"
             is PluginService.QuotaResult.Error     -> "⊙ Copilot ✗"
         }
         label.toolTipText = when (result) {
             is PluginService.QuotaResult.Loading ->
-                "GitHub Copilot Premium Quota — loading…"
+                "Quota Copilot Premium — caricamento…"
 
             is PluginService.QuotaResult.Available -> {
                 val q = result.quota
-                "<html>GitHub Copilot — Premium quota<br>" +
-                "Remaining: <b>${q.remaining} / ${q.total}</b><br>" +
-                "Used: ${q.used} (${String.format("%.1f", q.percentUsed)} %)<br>" +
-                "<i>Click for options</i></html>"
+                "<html>Copilot Premium<br>" +
+                "Disponibile: <b>${q.remaining} / ${q.total}</b><br>" +
+                "Utilizzato: ${q.used} (${String.format("%.1f", q.percentUsed)}%)<br>" +
+                "<i>Clicca per opzioni</i></html>"
             }
 
             is PluginService.QuotaResult.Unlimited ->
-                "GitHub Copilot — Premium quota: unlimited for your plan"
+                "Copilot Premium: quota illimitata"
 
             is PluginService.QuotaResult.NoAccount ->
-                "<html>GitHub Copilot — ⚠ Not signed in.<br>" +
-                "<i>Click to sign in.</i></html>"
+                "<html>Copilot — ⚠ Non autenticato.<br>" +
+                "<i>Clicca per accedere.</i></html>"
 
             is PluginService.QuotaResult.Error ->
-                "GitHub Copilot — ✗ Error: ${result.message}"
+                "Copilot — ✗ Errore: ${result.message}"
         }
     }
 
@@ -158,7 +158,7 @@ class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
 /**
  * Action: force an immediate quota refresh.
  */
-class RefreshAction : AnAction("Refresh") {
+class RefreshAction : AnAction("Aggiorna") {
 
     override fun actionPerformed(e: AnActionEvent) {
         PluginService.getInstance().refreshQuota()
@@ -168,7 +168,7 @@ class RefreshAction : AnAction("Refresh") {
 /**
  * Action: sign in via GitHub OAuth Device Flow.
  */
-class SignInAction(private val project: Project) : AnAction("Sign in with GitHub") {
+class SignInAction(private val project: Project) : AnAction("Accedi con GitHub") {
 
     override fun actionPerformed(e: AnActionEvent) {
         ApplicationManager.getApplication().executeOnPooledThread {
@@ -192,8 +192,8 @@ class SignInAction(private val project: Project) : AnAction("Sign in with GitHub
                 ApplicationManager.getApplication().invokeLater {
                     JOptionPane.showMessageDialog(
                         null,
-                        "Failed to start the sign-in flow:\n${ex.message}",
-                        "GitHub Sign-in Error",
+                        "Impossibile avviare l'autenticazione:\n${ex.message}",
+                        "Errore accesso GitHub",
                         JOptionPane.ERROR_MESSAGE
                     )
                 }
@@ -205,22 +205,22 @@ class SignInAction(private val project: Project) : AnAction("Sign in with GitHub
 /**
  * Action: sign out and clear stored credentials.
  */
-class SignOutAction : AnAction("Sign Out") {
+class SignOutAction : AnAction("Disconnetti") {
 
     override fun actionPerformed(e: AnActionEvent) {
         val auth = AuthService.getInstance()
         val username = auth.getSavedUsername()
-        val msg = if (username != null) "Sign out of \"$username\"?" else "Sign out?"
+        val msg = if (username != null) "Disconnettere \"$username\"?" else "Disconnettere l'account?"
 
         if (JOptionPane.showConfirmDialog(
-                null, msg, "GitHub Sign-out", JOptionPane.YES_NO_OPTION
+                null, msg, "Disconnessione GitHub", JOptionPane.YES_NO_OPTION
             ) == JOptionPane.YES_OPTION
         ) {
             auth.clearAuthentication()
             JOptionPane.showMessageDialog(
                 null,
-                "Successfully signed out.",
-                "GitHub Sign-out",
+                "Disconnessione completata.",
+                "Disconnessione GitHub",
                 JOptionPane.INFORMATION_MESSAGE
             )
             PluginService.getInstance().refreshQuota()

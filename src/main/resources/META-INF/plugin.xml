@@ -5,25 +5,24 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>GitHub Copilot Premium Quota Monitor</name>
+    <name>Copilot Premium Quota</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor url="https://github.com/antonio-petricca/github-copilot-premium-quota-monitor-for-ij">GitHub Copilot Premium Quota Monitor</vendor>
+    <vendor url="https://github.com/antonio-petricca/github-copilot-premium-quota-monitor-for-ij">Antonio Petricca</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[
-        Displays the remaining <b>GitHub Copilot premium AI-model quota</b> directly in the IDE status bar.<br/>
-        The widget refreshes automatically every 5 minutes and on click.<br/>
+        Visualizza la quota residua <b>Copilot Premium</b> direttamente nella status bar dell'IDE.<br/>
+        Aggiornamento automatico ogni 5 minuti o su richiesta.<br/>
         <br/>
-        <b>First-time setup</b><br/>
-        Right-click the quota widget in the status bar and select <em>Sign in with GitHub</em> to authorize the plugin via the standard GitHub
-        OAuth Device Flow (RFC 8628). No external plugin is required.<br/>
+        <b>Prima configurazione</b><br/>
+        Clic destro sul widget e seleziona <em>Accedi con GitHub</em> per autorizzare il plugin tramite OAuth Device Flow.<br/>
         <br/>
-        <b>Requirements</b><br/>
+        <b>Requisiti</b><br/>
         <ul>
-            <li>IntelliJ IDEA Community or Ultimate 2025.2 (build 252) or later.</li>
-            <li>A GitHub account with an active Copilot subscription.</li>
+            <li>IntelliJ IDEA 2025.2 o superiore.</li>
+            <li>Account GitHub con abbonamento Copilot attivo.</li>
         </ul>
     ]]></description>
 

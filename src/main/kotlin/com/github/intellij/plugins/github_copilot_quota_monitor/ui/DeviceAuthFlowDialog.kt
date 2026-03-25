@@ -43,9 +43,9 @@ class DeviceAuthFlowDialog(
     private var pollingThread: Thread? = null
 
     init {
-        title = "Sign in to GitHub — Copilot Quota Monitor"
-        setCancelButtonText("Cancel")
-        setOKButtonText("Done")
+        title = "Accedi a GitHub Copilot"
+        setCancelButtonText("Annulla")
+        setOKButtonText("Conferma")
         init()
         window?.isAlwaysOnTop = true
         // Start polling for authentication in background
@@ -95,7 +95,7 @@ class DeviceAuthFlowDialog(
         root.preferredSize = Dimension(580, 280)
 
         // Title section
-        val headerLabel = JBLabel("GitHub Copilot Authentication")
+        val headerLabel = JBLabel("Autenticazione copilot")
         headerLabel.font = headerLabel.font.deriveFont(Font.BOLD, 14f)
         root.add(headerLabel, BorderLayout.NORTH)
 
@@ -105,11 +105,11 @@ class DeviceAuthFlowDialog(
         contentPanel.border = JBUI.Borders.empty(16, 0, 0, 0)
 
         // Step 1: URL
-        contentPanel.add(JBLabel("1. Open in Browser"))
+        contentPanel.add(JBLabel("1. Apri nel browser"))
         contentPanel.add(Box.createVerticalStrut(8))
         val urlField = JTextField(response.verificationUri)
         urlField.isEditable = false
-        val openBrowserBtn = JButton("Open URL")
+        val openBrowserBtn = JButton("Apri URL")
         openBrowserBtn.addActionListener { openBrowser() }
         val urlPanel = JPanel(BorderLayout(8, 0))
         urlPanel.add(urlField, BorderLayout.CENTER)
@@ -118,13 +118,13 @@ class DeviceAuthFlowDialog(
         contentPanel.add(Box.createVerticalStrut(16))
 
         // Step 2: Code
-        contentPanel.add(JBLabel("2. Enter This Code on GitHub"))
+        contentPanel.add(JBLabel("2. Inserisci il codice su GitHub"))
         contentPanel.add(Box.createVerticalStrut(8))
         val codeLabel = JBLabel(response.userCode)
         codeLabel.font = Font(Font.MONOSPACED, Font.BOLD, 24)
         codeLabel.horizontalAlignment = SwingConstants.CENTER
         codeLabel.border = JBUI.Borders.empty(12)
-        val copyBtn = JButton("Copy")
+        val copyBtn = JButton("Copia")
         copyBtn.addActionListener {
             CopyPasteManager.getInstance().setContents(StringSelection(response.userCode))
         }
@@ -136,7 +136,7 @@ class DeviceAuthFlowDialog(
         contentPanel.add(Box.createVerticalStrut(16))
 
         // Status label
-        statusLabel = JBLabel("Waiting for authorization…")
+        statusLabel = JBLabel("In attesa di autorizzazione…")
         statusLabel!!.font = statusLabel!!.font.deriveFont(Font.PLAIN, 10f)
         statusLabel!!.horizontalAlignment = SwingConstants.CENTER
         contentPanel.add(statusLabel)
@@ -171,21 +171,21 @@ class DeviceAuthFlowDialog(
                         }
                         is AuthService.PollResult.Pending  -> { /* keep polling */ }
                         is AuthService.PollResult.Expired  -> {
-                            updateStatus("Code expired. Please restart the sign-in flow.")
+                            updateStatus("Codice scaduto. Riavvia l'accesso.")
                             return@Thread
                         }
                         is AuthService.PollResult.Error    -> {
-                            updateStatus("Error: ${r.message}")
+                            updateStatus("Errore: ${r.message}")
                             return@Thread
                         }
                     }
                 } catch (e: Exception) {
-                    LOG.warn("Polling error", e)
-                    updateStatus("Network error: ${e.message}")
+                    LOG.warn("Errore polling", e)
+                    updateStatus("Errore di rete: ${e.message}")
                     return@Thread
                 }
             }
-            updateStatus("Code expired. Please restart the sign-in flow.")
+            updateStatus("Codice scaduto. Riavvia l'accesso.")
         }.also {
             it.isDaemon = true
             it.start()
@@ -209,7 +209,7 @@ class DeviceAuthFlowDialog(
         try {
             if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(URI(response.verificationUri))
         } catch (e: Exception) {
-            LOG.warn("Could not open browser automatically", e)
+            LOG.warn("Impossibile aprire il browser automaticamente", e)
         }
     }
 }
