@@ -92,7 +92,7 @@ class CopilotQuotaStatusBarWidget(
             is CopilotQuotaService.QuotaResult.Loading   -> "⊙ Copilot"
             is CopilotQuotaService.QuotaResult.Available -> "⊙ ${result.quota.remaining}/${result.quota.total}"
             is CopilotQuotaService.QuotaResult.Unlimited -> "⊙ Copilot ∞"
-            is CopilotQuotaService.QuotaResult.NoAccount -> "⊙ Copilot ⚠"
+            is CopilotQuotaService.QuotaResult.NoAccount -> "⊙ Copilot — Sign in"
             is CopilotQuotaService.QuotaResult.Error     -> "⊙ Copilot ✗"
         }
         label.toolTipText = when (result) {
