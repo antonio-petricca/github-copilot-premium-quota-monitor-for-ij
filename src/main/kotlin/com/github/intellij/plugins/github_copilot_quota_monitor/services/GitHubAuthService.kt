@@ -75,7 +75,11 @@ class GitHubAuthService {
 
     // ── Token store ───────────────────────────────────────────────────────────
 
-    fun getToken(): String? = PasswordSafe.instance.getPassword(TOKEN_ATTRS)
+    fun getToken(): String? {
+        val token = PasswordSafe.instance.getPassword(TOKEN_ATTRS)
+        LOG.info("[CopilotQuotaMonitor] getToken: token is ${if (token != null) "present" else "null"}")
+        return token
+    }
 
     fun isAuthenticated(): Boolean = getToken() != null
 
@@ -86,8 +90,10 @@ class GitHubAuthService {
      * Must be called off the EDT.
      */
     fun saveAuthentication(token: String) {
+        LOG.info("[CopilotQuotaMonitor] saveAuthentication: saving token")
         PasswordSafe.instance.setPassword(TOKEN_ATTRS, token)
         val username = fetchUsername(token)
+        LOG.info("[CopilotQuotaMonitor] saveAuthentication: fetched username = $username")
         PasswordSafe.instance.setPassword(USERNAME_ATTRS, username)
     }
 
