@@ -4,6 +4,7 @@ import com.google.gson.JsonParser
 import com.intellij.openapi.application.ApplicationManager
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthStateNotifier
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthStateListener
+import com.github.intellij.plugins.github_copilot_quota_monitor.services.QuotaNotifier
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import java.net.HttpURLConnection
@@ -74,6 +75,12 @@ class PluginService {
                 val result = fetchQuota()
                 cachedResultRef.set(result)
                 lastFetchTime.set(System.currentTimeMillis())
+                // Publish quota update to MessageBus listeners
+                try {
+                    ApplicationManager.getApplication().messageBus.syncPublisher(QuotaNotifier.QUOTA_TOPIC).quotaUpdated(result)
+                } catch (_: Exception) {
+                    // best-effort
+                }
                 ApplicationManager.getApplication().invokeLater { onComplete(result) }
             } finally {
                 isFetching.set(false)

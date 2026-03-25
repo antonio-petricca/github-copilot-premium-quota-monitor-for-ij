@@ -20,6 +20,9 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 // ...existing code...
 import com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages
+import com.github.intellij.plugins.github_copilot_quota_monitor.services.QuotaNotifier
+import com.github.intellij.plugins.github_copilot_quota_monitor.services.QuotaListener
+import com.intellij.util.messages.MessageBusConnection
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JOptionPane
@@ -48,6 +51,7 @@ class CopilotQuotaStatusBarWidget(
     }
 
     private var statusBar: StatusBar? = null
+    private var busConnection: MessageBusConnection? = null
 
     /**
      * The label that lives in the status bar.
@@ -82,11 +86,25 @@ class CopilotQuotaStatusBarWidget(
         // Display the current cached state immediately
         updateLabel(PluginService.getInstance().cachedResult)
         refresh()
+        // Subscribe to quota update notifications so we can update the label
+        try {
+            busConnection = ApplicationManager.getApplication().messageBus.connect()
+            busConnection?.subscribe(QuotaNotifier.QUOTA_TOPIC, object : QuotaListener {
+                override fun quotaUpdated(result: PluginService.QuotaResult) {
+                    // Ensure UI update happens on EDT
+                    ApplicationManager.getApplication().invokeLater { updateLabel(result) }
+                }
+            })
+        } catch (_: Exception) {
+            // best-effort
+        }
         refreshTimer.start()
     }
 
     override fun dispose() {
         refreshTimer.stop()
+        try { busConnection?.disconnect() } catch (_: Exception) {}
+        busConnection = null
         statusBar = null
     }
 
