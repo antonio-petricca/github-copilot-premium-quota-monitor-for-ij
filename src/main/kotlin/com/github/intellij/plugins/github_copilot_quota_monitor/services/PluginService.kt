@@ -47,7 +47,7 @@ class PluginService {
     data class QuotaInfo(val percentRemaining: Double, val renewalUtc: String? = null) {
         constructor(used: Int, remaining: Int, total: Int, renewalUtc: String? = null) : this(
             if (total > 0) remaining.toDouble() / total * 100.0 else 0.0,
-            renewalUtc,
+            renewalUtc
         )
     }
 
@@ -130,6 +130,9 @@ class PluginService {
         return try {
             val root = JsonParser.parseString(json).asJsonObject
 
+            // Read optional top-level quota_reset_date
+            val quotaReset = root["quota_reset_date"]?.asString
+
             // Modern API format: quota_snapshots.premium_interactions.percent_remaining
             root.getAsJsonObject("quota_snapshots")
                 ?.getAsJsonObject("premium_interactions")
@@ -137,8 +140,7 @@ class PluginService {
                     val pct = premium["percent_remaining"]?.asDouble
                     if (pct != null) {
                         val unlimited = premium["unlimited"]?.asBoolean ?: false
-                        val timestamp = premium["timestamp_utc"]?.asString
-                        return if (unlimited) QuotaResult.Unlimited else QuotaResult.Available(QuotaInfo(pct, timestamp))
+                        return if (unlimited) QuotaResult.Unlimited else QuotaResult.Available(QuotaInfo(pct, quotaReset))
                     }
                 }
 
@@ -151,8 +153,7 @@ class PluginService {
                     if (limit != null) {
                         val used      = it["used"]?.asInt      ?: 0
                         val remaining = it["remaining"]?.asInt ?: (limit - used)
-                        val timestamp  = it["timestamp_utc"]?.asString
-                        return QuotaResult.Available(QuotaInfo(used, remaining, limit, timestamp))
+                        return QuotaResult.Available(QuotaInfo(used, remaining, limit, quotaReset))
                     }
                 }
             }
@@ -169,8 +170,7 @@ class PluginService {
                     if (total != null) {
                         val used      = quotaObj["used"]?.asInt      ?: 0
                         val remaining = quotaObj["remaining"]?.asInt ?: (total - used)
-                        val timestamp  = quotaObj["timestamp_utc"]?.asString
-                        return QuotaResult.Available(QuotaInfo(used, remaining, total, timestamp))
+                        return QuotaResult.Available(QuotaInfo(used, remaining, total, quotaReset))
                     }
                 }
 
@@ -180,7 +180,7 @@ class PluginService {
                 ?: root["premium_requests_monthly_limit"]?.asInt
             if (maxFlat != null) {
                 val used = root["premium_requests_used"]?.asInt ?: 0
-                return QuotaResult.Available(QuotaInfo(used, maxFlat - used, maxFlat))
+                return QuotaResult.Available(QuotaInfo(used, maxFlat - used, maxFlat, quotaReset))
             }
 
             QuotaResult.Unlimited
