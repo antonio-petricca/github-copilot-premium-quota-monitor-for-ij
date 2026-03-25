@@ -15,7 +15,6 @@ import java.awt.Font
 import java.awt.datatransfer.StringSelection
 import java.net.URI
 import javax.swing.*
-import kotlin.concurrent.timer
 
 /**
  * Modal dialog that guides the user through the GitHub OAuth Device Flow.
@@ -53,11 +52,29 @@ class DeviceAuthFlowDialog(
         startPolling()
     }
 
+    override fun getInitialLocation(): java.awt.Point? {
+        // Return a Point in top-left corner instead of null to prevent IntelliJ from centering
+        window?.graphicsConfiguration?.bounds?.let { screenBounds ->
+            return java.awt.Point(screenBounds.x + 32, screenBounds.y + 32)
+        }
+        return super.getInitialLocation()
+    }
+
     override fun show() {
         super.show()
-        // Position dialog in the top-left corner using invokeLater to ensure it overrides IntelliJ's default positioning
-        ApplicationManager.getApplication().invokeLater {
-            positionDialogTopLeft()
+        // Double-check positioning after show using a daemon thread
+        Thread {
+            try {
+                Thread.sleep(150)
+                ApplicationManager.getApplication().invokeLater {
+                    positionDialogTopLeft()
+                }
+            } catch (_: InterruptedException) {
+                // Thread was interrupted, stop
+            }
+        }.apply {
+            isDaemon = true
+            start()
         }
     }
 
