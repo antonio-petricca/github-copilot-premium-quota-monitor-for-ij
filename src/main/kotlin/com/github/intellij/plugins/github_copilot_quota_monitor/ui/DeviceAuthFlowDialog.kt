@@ -19,7 +19,7 @@ import javax.swing.*
 /**
  * Modal dialog that guides the user through the GitHub OAuth Device Flow.
  *
- * - Shows the [verificationUri] and [userCode] for the user to enter on GitHub.
+ * - Shows the device code and verification URL for the user to enter on GitHub.
  * - Opens the browser automatically.
  * - Polls GitHub in a background daemon thread and closes itself when auth succeeds.
  * - The caller checks [authenticated] after [show] returns.
@@ -48,13 +48,13 @@ class DeviceAuthFlowDialog(
         setOKButtonText("Done")
         init()
         window?.isAlwaysOnTop = true
-        // Non aprire il browser automaticamente
+        // Start polling for authentication in background
         startPolling()
     }
 
     override fun show() {
         super.show()
-        // Dopo che il dialog è visibile e dimensionato, posizionalo in alto a destra
+        // Position dialog in the top-right corner after it's visible and sized
         val parent = window?.owner
         if (parent != null) {
             val screenSize = parent.graphicsConfiguration?.bounds

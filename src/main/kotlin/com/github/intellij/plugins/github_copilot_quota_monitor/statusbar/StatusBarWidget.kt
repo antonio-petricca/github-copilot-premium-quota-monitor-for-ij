@@ -1,20 +1,19 @@
 package com.github.intellij.plugins.github_copilot_quota_monitor.statusbar
 
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.Service
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
+import com.github.intellij.plugins.github_copilot_quota_monitor.services.PluginService
 import com.github.intellij.plugins.github_copilot_quota_monitor.ui.DeviceAuthFlowDialog
+import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.ide.DataManager
-import com.intellij.ui.awt.RelativePoint
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
-import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.CustomStatusBarWidget
+import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
+import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI
 import java.awt.Point
 import java.awt.event.MouseAdapter
@@ -54,7 +53,7 @@ class CopilotQuotaStatusBarWidget(
         border = JBUI.Borders.empty(0, 4)
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (SwingUtilities.isLeftMouseButton(e)) showPopupMenu(e)
+                if (SwingUtilities.isLeftMouseButton(e)) showPopupMenu()
             }
         })
     }
@@ -76,8 +75,8 @@ class CopilotQuotaStatusBarWidget(
 
     override fun install(statusBar: StatusBar) {
         this.statusBar = statusBar
-        // Mostra subito lo stato corrente (anche se la quota è già aggiornata)
-        updateLabel(quotaService().cachedResult)
+        // Display the current cached state immediately
+        updateLabel(PluginService.getInstance().cachedResult)
         refresh()
         refreshTimer.start()
     }
@@ -89,19 +88,19 @@ class CopilotQuotaStatusBarWidget(
 
     // ── Label update ──────────────────────────────────────────────────────────
 
-    private fun updateLabel(result: Service.QuotaResult) {
+    private fun updateLabel(result: PluginService.QuotaResult) {
         label.text = when (result) {
-            is Service.QuotaResult.Loading   -> "⊙ Copilot"
-            is Service.QuotaResult.Available -> "⊙ ${result.quota.remaining}/${result.quota.total}"
-            is Service.QuotaResult.Unlimited -> "⊙ Copilot ∞"
-            is Service.QuotaResult.NoAccount -> "⊙ Copilot — Sign in"
-            is Service.QuotaResult.Error     -> "⊙ Copilot ✗"
+            is PluginService.QuotaResult.Loading   -> "⊙ Copilot"
+            is PluginService.QuotaResult.Available -> "⊙ ${result.quota.remaining}/${result.quota.total}"
+            is PluginService.QuotaResult.Unlimited -> "⊙ Copilot ∞"
+            is PluginService.QuotaResult.NoAccount -> "⊙ Copilot — Sign in"
+            is PluginService.QuotaResult.Error     -> "⊙ Copilot ✗"
         }
         label.toolTipText = when (result) {
-            is Service.QuotaResult.Loading ->
+            is PluginService.QuotaResult.Loading ->
                 "GitHub Copilot Premium Quota — loading…"
 
-            is Service.QuotaResult.Available -> {
+            is PluginService.QuotaResult.Available -> {
                 val q = result.quota
                 "<html>GitHub Copilot — Premium quota<br>" +
                 "Remaining: <b>${q.remaining} / ${q.total}</b><br>" +
@@ -109,21 +108,21 @@ class CopilotQuotaStatusBarWidget(
                 "<i>Click for options</i></html>"
             }
 
-            is Service.QuotaResult.Unlimited ->
+            is PluginService.QuotaResult.Unlimited ->
                 "GitHub Copilot — Premium quota: unlimited for your plan"
 
-            is Service.QuotaResult.NoAccount ->
+            is PluginService.QuotaResult.NoAccount ->
                 "<html>GitHub Copilot — ⚠ Not signed in.<br>" +
                 "<i>Click to sign in.</i></html>"
 
-            is Service.QuotaResult.Error ->
+            is PluginService.QuotaResult.Error ->
                 "GitHub Copilot — ✗ Error: ${result.message}"
         }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private fun showPopupMenu(event: MouseEvent) {
+    private fun showPopupMenu() {
         val dataContext = DataManager.getInstance().getDataContext(label)
         val popup = JBPopupFactory.getInstance()
             .createActionGroupPopup(
@@ -133,19 +132,11 @@ class CopilotQuotaStatusBarWidget(
                 JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
                 false
             )
-        // Show the popup above the status bar widget
         popup.show(RelativePoint(label, Point(0, -popup.content.preferredSize.height)))
     }
 
-    private fun quotaService(): Service = service()
-
     fun refresh() {
-        // Mostra subito stato intermedio
-        label.text = "⊙ Copilot (checking…)"
-        label.toolTipText = "Checking Copilot quota…"
-        quotaService().refreshAsync { result ->
-            updateLabel(result)
-        }
+        PluginService.getInstance().refreshQuota { updateLabel(it) }
     }
 }
 
@@ -159,18 +150,18 @@ class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
 
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
         val auth = AuthService.getInstance()
-        val authAction: AnAction = if (auth.isAuthenticated()) SignOutAction(project) else SignInAction(project)
-        return arrayOf(RefreshAction(project), authAction)
+        val authAction: AnAction = if (auth.isAuthenticated()) SignOutAction() else SignInAction(project)
+        return arrayOf(RefreshAction(), authAction)
     }
 }
 
 /**
  * Action: force an immediate quota refresh.
  */
-class RefreshAction(private val project: Project) : AnAction("Refresh") {
+class RefreshAction : AnAction("Refresh") {
 
     override fun actionPerformed(e: AnActionEvent) {
-        Service.getInstance().refreshAsync()
+        PluginService.getInstance().refreshQuota()
     }
 }
 
@@ -186,9 +177,9 @@ class SignInAction(private val project: Project) : AnAction("Sign in with GitHub
                 ApplicationManager.getApplication().invokeLater {
                     val dlg = DeviceAuthFlowDialog(project, deviceCode)
                     dlg.show()
-                    // Force un refresh globale e, se presente, anche del widget
+                    // Force a refresh of the quota and the widget if present
                     if (dlg.authenticated) {
-                        Service.getInstance().refreshAsync()
+                        PluginService.getInstance().refreshQuota()
                         val statusBar = com.intellij.openapi.wm.WindowManager.getInstance().getStatusBar(project)
                         statusBar?.getWidget(CopilotQuotaStatusBarWidget.WIDGET_ID)?.let { widget ->
                             if (widget is CopilotQuotaStatusBarWidget) {
@@ -214,7 +205,7 @@ class SignInAction(private val project: Project) : AnAction("Sign in with GitHub
 /**
  * Action: sign out and clear stored credentials.
  */
-class SignOutAction(private val project: Project) : AnAction("Sign out") {
+class SignOutAction : AnAction("Sign Out") {
 
     override fun actionPerformed(e: AnActionEvent) {
         val auth = AuthService.getInstance()
@@ -232,9 +223,7 @@ class SignOutAction(private val project: Project) : AnAction("Sign out") {
                 "GitHub Sign-out",
                 JOptionPane.INFORMATION_MESSAGE
             )
-            // Force a refresh of the status bar to show "not signed in" state
-            Service.getInstance().refreshAsync()
+            PluginService.getInstance().refreshQuota()
         }
     }
 }
-

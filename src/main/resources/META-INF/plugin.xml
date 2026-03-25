@@ -42,7 +42,7 @@
 
         <!-- Quota service: fetches and caches quota data -->
         <applicationService
-            serviceImplementation="com.github.intellij.plugins.github_copilot_quota_monitor.services.Service"/>
+            serviceImplementation="com.github.intellij.plugins.github_copilot_quota_monitor.services.PluginService"/>
 
         <!-- Status bar widget factory -->
         <statusBarWidgetFactory
