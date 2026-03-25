@@ -137,7 +137,7 @@ class CopilotQuotaStatusBarWidget(
 
     private fun quotaService(): CopilotQuotaService = service()
 
-    private fun refresh() {
+    fun refresh() {
         // Mostra subito stato intermedio
         label.text = "⊙ Copilot (checking…)"
         label.toolTipText = "Checking Copilot quota…"
@@ -186,7 +186,15 @@ class SignInAction(private val project: Project) : AnAction("Sign in with GitHub
                     dlg.show()
                     // Force a refresh of the quota after signin
                     if (dlg.authenticated) {
-                        CopilotQuotaService.getInstance().refreshAsync()
+                        CopilotQuotaService.getInstance().refreshAsync {
+                            // Aggiorna esplicitamente tutti i widget CopilotQuotaStatusBarWidget
+                            val statusBar = com.intellij.openapi.wm.WindowManager.getInstance().getStatusBar(project)
+                            statusBar?.getWidget(CopilotQuotaStatusBarWidget.WIDGET_ID)?.let { widget ->
+                                if (widget is CopilotQuotaStatusBarWidget) {
+                                    widget.refresh()
+                                }
+                            }
+                        }
                     }
                 }
             } catch (ex: Exception) {
