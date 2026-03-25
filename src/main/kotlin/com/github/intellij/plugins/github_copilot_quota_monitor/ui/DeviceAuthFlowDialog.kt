@@ -54,39 +54,17 @@ class DeviceAuthFlowDialog(
     }
 
     override fun getInitialLocation(): java.awt.Point? {
-        // Return a Point in top-left corner instead of null to prevent IntelliJ from centering
-        window?.graphicsConfiguration?.bounds?.let { screenBounds ->
-            return java.awt.Point(screenBounds.x + 32, screenBounds.y + 32)
-        }
+        // Use default initial location behaviour (allow DialogWrapper/IDE to decide).
+        // Positioning is enforced after showing the dialog to ensure centering on screen.
         return super.getInitialLocation()
     }
 
     override fun show() {
+        // Use default DialogWrapper/IDE positioning behaviour.
         super.show()
-        // Double-check positioning after show using a daemon thread
-        Thread {
-            try {
-                Thread.sleep(150)
-                ApplicationManager.getApplication().invokeLater {
-                    positionDialogTopLeft()
-                }
-            } catch (_: InterruptedException) {
-                // Thread was interrupted, stop
-            }
-        }.apply {
-            isDaemon = true
-            start()
-        }
     }
 
-    private fun positionDialogTopLeft() {
-        window?.let { w ->
-            val screenBounds = w.graphicsConfiguration?.bounds ?: return
-            val x = screenBounds.x + 32
-            val y = screenBounds.y + 32
-            w.setLocation(x, y)
-        }
-    }
+    // Positioning helper removed; dialog is centered on screen after show().
 
     // ── UI ────────────────────────────────────────────────────────────────────
 
