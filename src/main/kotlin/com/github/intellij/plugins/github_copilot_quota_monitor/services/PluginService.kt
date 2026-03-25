@@ -4,8 +4,6 @@ import com.google.gson.JsonParser
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
-import java.text.MessageFormat
-import java.util.*
 import java.net.HttpURLConnection
 import java.net.URI
 import java.util.concurrent.atomic.AtomicBoolean
@@ -66,7 +64,7 @@ class PluginService {
     private fun fetchQuota(): QuotaResult {
         val token = AuthService.getInstance().getToken()
             ?: return QuotaResult.NoAccount(
-                com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("not_signed_in")
+                com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("general_not_signed_in")
             )
         return try {
             val conn = (URI.create(COPILOT_USER_API_URL).toURL().openConnection() as HttpURLConnection).apply {
@@ -81,12 +79,12 @@ class PluginService {
             when (val code = conn.responseCode) {
                 HttpURLConnection.HTTP_OK -> parseQuota(conn.inputStream.bufferedReader().readText())
                 HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN -> {
-                    AuthService.getInstance().clearAuthentication()
-                    QuotaResult.NoAccount(
-                        com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("token_invalid", code)
-                    )
+                        AuthService.getInstance().clearAuthentication()
+                            QuotaResult.NoAccount(
+                                        com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("general_token_invalid", code)
+                            )
                 }
-                else -> QuotaResult.Error(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("api_http", code))
+                else -> QuotaResult.Error(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("general_api_http", code))
             }
         } catch (e: Exception) {
             LOG.warn("Failed to fetch GitHub Copilot quota", e)
@@ -133,7 +131,7 @@ class PluginService {
             QuotaResult.Unlimited
         } catch (e: Exception) {
             LOG.warn("Failed to parse Copilot quota response", e)
-            QuotaResult.Error(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("parse_failed", e.message))
+            QuotaResult.Error(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("general_parse_failed", e.message))
         }
     }
 }

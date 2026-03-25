@@ -157,7 +157,7 @@ class AuthService {
     fun requestDeviceCode(): DeviceCodeResponse {
         val conn = post(DEVICE_CODE_URL, "client_id=${enc(CLIENT_ID)}&scope=${enc(SCOPE)}")
         val code = conn.responseCode
-        if (code != 200) throw RuntimeException(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("device_code_http_error", code))
+        if (code != 200) throw RuntimeException(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("auth_device_code_http_error", code))
 
         val json = JsonParser.parseString(conn.inputStream.bufferedReader().readText()).asJsonObject
         return DeviceCodeResponse(
@@ -180,7 +180,7 @@ class AuthService {
                        "&device_code=${enc(deviceCode)}" +
                        "&grant_type=${enc("urn:ietf:params:oauth:grant-type:device_code")}"
             val conn = post(ACCESS_TOKEN_URL, body)
-            if (conn.responseCode != 200) return PollResult.Error(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("poll_http_error", conn.responseCode))
+            if (conn.responseCode != 200) return PollResult.Error(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.format("auth_poll_http_error", conn.responseCode))
 
             val json = JsonParser.parseString(conn.inputStream.bufferedReader().readText()).asJsonObject
             val token = json["access_token"]?.asString

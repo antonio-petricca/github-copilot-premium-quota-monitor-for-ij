@@ -7,7 +7,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import java.text.MessageFormat
-import java.util.*
 import javax.swing.JOptionPane
 
 /**
@@ -45,12 +44,12 @@ class SignInStartupActivity : ProjectActivity {
             } catch (e: Exception) {
                 LOG.warn("Failed to initiate sign-in flow", e)
                 ApplicationManager.getApplication().invokeLater {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                                                        MessageFormat.format(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("startup_fail_msg"), e.message),
-                                                                com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("startup_fail_title"),
-                                JOptionPane.INFORMATION_MESSAGE
-                            )
+                                JOptionPane.showMessageDialog(
+                                                null,
+                                                                                                                                                        MessageFormat.format(com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("startup_startup_fail_msg"), e.message),
+                                                                                                                                                                                                com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages.get("startup_startup_fail_title"),
+                                                JOptionPane.INFORMATION_MESSAGE
+                                            )
                 }
             }
         }

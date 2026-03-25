@@ -3,8 +3,6 @@ package com.github.intellij.plugins.github_copilot_quota_monitor.ui
 import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
-import java.text.MessageFormat
-import java.util.*
 import com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.Project
@@ -46,9 +44,9 @@ class DeviceAuthFlowDialog(
     private var pollingThread: Thread? = null
 
     init {
-        title = Messages.get("dialog_title")
-        setCancelButtonText(Messages.get("button_cancel"))
-        setOKButtonText(Messages.get("button_ok"))
+        title = Messages.get("deviceauth_dialog_title")
+        setCancelButtonText(Messages.get("deviceauth_button_cancel"))
+        setOKButtonText(Messages.get("deviceauth_button_ok"))
         init()
         window?.isAlwaysOnTop = true
         // Start polling for authentication in background
@@ -98,7 +96,7 @@ class DeviceAuthFlowDialog(
         root.preferredSize = Dimension(580, 280)
 
         // Title section
-        val headerLabel = JBLabel(Messages.get("dialog_header"))
+        val headerLabel = JBLabel(Messages.get("deviceauth_dialog_header"))
         headerLabel.font = headerLabel.font.deriveFont(Font.BOLD, 14f)
         root.add(headerLabel, BorderLayout.NORTH)
 
@@ -108,11 +106,11 @@ class DeviceAuthFlowDialog(
         contentPanel.border = JBUI.Borders.emptyTop(16)
 
         // Step 1: URL
-        contentPanel.add(JBLabel(Messages.get("step1")))
+        contentPanel.add(JBLabel(Messages.get("deviceauth_step1")))
         contentPanel.add(Box.createVerticalStrut(8))
         val urlField = JTextField(response.verificationUri)
         urlField.isEditable = false
-        val openBrowserBtn = JButton(Messages.get("open_url"))
+        val openBrowserBtn = JButton(Messages.get("deviceauth_open_url"))
         openBrowserBtn.addActionListener { openBrowser() }
         val urlPanel = JPanel(BorderLayout(8, 0))
         urlPanel.add(urlField, BorderLayout.CENTER)
@@ -121,13 +119,13 @@ class DeviceAuthFlowDialog(
         contentPanel.add(Box.createVerticalStrut(16))
 
         // Step 2: Code
-        contentPanel.add(JBLabel(Messages.get("step2")))
+        contentPanel.add(JBLabel(Messages.get("deviceauth_step2")))
         contentPanel.add(Box.createVerticalStrut(8))
         val codeLabel = JBLabel(response.userCode)
         codeLabel.font = Font(Font.MONOSPACED, Font.BOLD, 24)
         codeLabel.horizontalAlignment = SwingConstants.CENTER
         codeLabel.border = JBUI.Borders.empty(12)
-        val copyBtn = JButton(Messages.get("copy"))
+        val copyBtn = JButton(Messages.get("deviceauth_copy"))
         copyBtn.addActionListener {
             CopyPasteManager.getInstance().setContents(StringSelection(response.userCode))
         }
@@ -139,7 +137,7 @@ class DeviceAuthFlowDialog(
         contentPanel.add(Box.createVerticalStrut(16))
 
         // Status label
-        statusLabel = JBLabel(Messages.get("waiting_auth"))
+        statusLabel = JBLabel(Messages.get("deviceauth_waiting_auth"))
         statusLabel!!.font = statusLabel!!.font.deriveFont(Font.PLAIN, 10f)
         statusLabel!!.horizontalAlignment = SwingConstants.CENTER
         contentPanel.add(statusLabel)
@@ -174,21 +172,21 @@ class DeviceAuthFlowDialog(
                         }
                         is AuthService.PollResult.Pending  -> { /* keep polling */ }
                         is AuthService.PollResult.Expired  -> {
-                            updateStatus(Messages.get("code_expired"))
+                            updateStatus(Messages.get("deviceauth_code_expired"))
                             return@Thread
                         }
                         is AuthService.PollResult.Error    -> {
-                            updateStatus(Messages.format("error_with_message", r.message))
+                            updateStatus(Messages.format("deviceauth_error_with_message", r.message))
                             return@Thread
                         }
                     }
                 } catch (e: Exception) {
                     LOG.warn("Errore polling", e)
-                    updateStatus(Messages.format("network_error_prefix", e.message))
+                    updateStatus(Messages.format("deviceauth_network_error_prefix", e.message))
                     return@Thread
                 }
             }
-            updateStatus(Messages.get("code_expired"))
+            updateStatus(Messages.get("deviceauth_code_expired"))
         }.also {
             it.isDaemon = true
             it.start()

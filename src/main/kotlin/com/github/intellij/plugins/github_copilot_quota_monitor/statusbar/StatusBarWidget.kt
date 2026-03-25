@@ -53,7 +53,7 @@ class CopilotQuotaStatusBarWidget(
      * The label that lives in the status bar.
      * Left-click opens the popup menu (Refresh / Sign in or Sign out).
      */
-    private val label: JLabel = JLabel(Messages.get("widget_initial")).apply {
+    private val label: JLabel = JLabel(Messages.get("statusbar_widget_initial")).apply {
         border = JBUI.Borders.empty(0, 4)
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
@@ -94,26 +94,26 @@ class CopilotQuotaStatusBarWidget(
 
     private fun updateLabel(result: PluginService.QuotaResult) {
         label.text = when (result) {
-            is PluginService.QuotaResult.Loading   -> Messages.get("widget_initial")
-            is PluginService.QuotaResult.Available -> Messages.format("widget_available", result.quota.remaining, result.quota.total)
-            is PluginService.QuotaResult.Unlimited -> Messages.get("widget_unlimited")
-            is PluginService.QuotaResult.NoAccount -> Messages.get("widget_signin")
-            is PluginService.QuotaResult.Error     -> Messages.get("widget_error")
+            is PluginService.QuotaResult.Loading   -> Messages.get("statusbar_widget_initial")
+            is PluginService.QuotaResult.Available -> Messages.format("statusbar_widget_available", result.quota.remaining, result.quota.total)
+            is PluginService.QuotaResult.Unlimited -> Messages.get("statusbar_widget_unlimited")
+            is PluginService.QuotaResult.NoAccount -> Messages.get("statusbar_widget_signin")
+            is PluginService.QuotaResult.Error     -> Messages.get("statusbar_widget_error")
         }
         label.toolTipText = when (result) {
             is PluginService.QuotaResult.Loading ->
-                Messages.get("tooltip_loading")
+                Messages.get("statusbar_tooltip_loading")
 
             is PluginService.QuotaResult.Available -> {
                 val q = result.quota
-                Messages.format("tooltip_available_html", q.remaining, q.total, q.used, String.format("%.1f", q.percentUsed))
+                Messages.format("statusbar_tooltip_available_html", q.remaining, q.total, q.used, String.format("%.1f", q.percentUsed))
             }
 
-            is PluginService.QuotaResult.Unlimited -> Messages.get("tooltip_unlimited")
+            is PluginService.QuotaResult.Unlimited -> Messages.get("statusbar_tooltip_unlimited")
 
-            is PluginService.QuotaResult.NoAccount -> Messages.get("tooltip_noaccount_html")
+            is PluginService.QuotaResult.NoAccount -> Messages.get("statusbar_tooltip_noaccount_html")
 
-            is PluginService.QuotaResult.Error -> Messages.format("tooltip_error", result.message)
+            is PluginService.QuotaResult.Error -> Messages.format("statusbar_tooltip_error", result.message)
         }
     }
 
@@ -191,8 +191,8 @@ class SignInAction(private val project: Project) : AnAction(Messages.get("action
                 ApplicationManager.getApplication().invokeLater {
                     JOptionPane.showMessageDialog(
                         null,
-                        Messages.format("dialog_auth_error_msg", ex.message),
-                        Messages.get("dialog_auth_error_title"),
+                        Messages.format("statusbar_dialog_auth_error_msg", ex.message),
+                        Messages.get("statusbar_dialog_auth_error_title"),
                         JOptionPane.ERROR_MESSAGE
                     )
                 }
@@ -209,7 +209,7 @@ class SignOutAction : AnAction(Messages.get("action_signout")) {
     override fun actionPerformed(e: AnActionEvent) {
         val auth = AuthService.getInstance()
         val username = auth.getSavedUsername()
-        val msg = if (username != null) Messages.format("signout_confirm_when_username", username) else Messages.get("signout_confirm_no_username")
+        val msg = if (username != null) Messages.format("statusbar_signout_confirm_when_username", username) else Messages.get("statusbar_signout_confirm_no_username")
 
         if (JOptionPane.showConfirmDialog(
                 null, msg, Messages.get("signout_title"), JOptionPane.YES_NO_OPTION
@@ -218,8 +218,8 @@ class SignOutAction : AnAction(Messages.get("action_signout")) {
             auth.clearAuthentication()
             JOptionPane.showMessageDialog(
                 null,
-                Messages.get("signout_complete"),
-                Messages.get("signout_title"),
+                Messages.get("statusbar_signout_complete"),
+                Messages.get("statusbar_signout_title"),
                 JOptionPane.INFORMATION_MESSAGE
             )
             PluginService.getInstance().refreshQuota()

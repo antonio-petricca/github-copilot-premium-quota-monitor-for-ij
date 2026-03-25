@@ -16,7 +16,7 @@ class StatusBarWidgetFactory : StatusBarWidgetFactory {
 
     override fun getId(): String = CopilotQuotaStatusBarWidget.WIDGET_ID
 
-    override fun getDisplayName(): String = Messages.get("display_name")
+    override fun getDisplayName(): String = Messages.get("statusbarfactory_display_name")
 
     override fun isAvailable(project: Project): Boolean = true
 
