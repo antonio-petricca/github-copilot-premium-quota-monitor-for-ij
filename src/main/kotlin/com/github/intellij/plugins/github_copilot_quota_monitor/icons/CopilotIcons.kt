@@ -12,6 +12,6 @@ object CopilotIcons {
 
     /** 16×16 GitHub Copilot logo used in the status bar widget and popup actions. */
     @JvmField
-    val Logo = IconLoader.getIcon("/icons/copilot.svg", CopilotIcons::class.java)
+    val Logo = IconLoader.getIcon("/icons/statusbar.svg", CopilotIcons::class.java)
 }
 
