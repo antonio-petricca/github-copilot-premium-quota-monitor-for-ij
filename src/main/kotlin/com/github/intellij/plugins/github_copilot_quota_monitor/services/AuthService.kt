@@ -23,10 +23,10 @@ import java.net.URLEncoder
  * is required: authentication is handled entirely by this service.
  */
 @Service(Service.Level.APP)
-class GitHubAuthService {
+class AuthService {
 
     companion object {
-        private val LOG = Logger.getInstance(GitHubAuthService::class.java)
+        private val LOG = Logger.getInstance(AuthService::class.java)
 
         /**
          * OAuth App client ID used for the Device Flow.
@@ -53,7 +53,7 @@ class GitHubAuthService {
         )
 
         @JvmStatic
-        fun getInstance(): GitHubAuthService = service()
+        fun getInstance(): AuthService = service()
     }
 
     // ── Domain types ──────────────────────────────────────────────────────────

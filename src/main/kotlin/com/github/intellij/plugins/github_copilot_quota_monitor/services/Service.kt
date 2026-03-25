@@ -14,14 +14,14 @@ import java.util.concurrent.atomic.AtomicReference
  * Application-level service responsible for fetching and caching
  * the GitHub Copilot premium quota from the GitHub API.
  *
- * Authentication is handled by [GitHubAuthService] via OAuth Device Flow.
+ * Authentication is handled by [AuthService] via OAuth Device Flow.
  * No dependency on the GitHub Copilot plugin or org.jetbrains.plugins.github.
  */
 @Service(Service.Level.APP)
-class CopilotQuotaService {
+class Service {
 
     companion object {
-        private val LOG = Logger.getInstance(CopilotQuotaService::class.java)
+        private val LOG = Logger.getInstance(Service::class.java)
 
         /** Cache duration: 5 minutes */
         private const val CACHE_DURATION_MS = 5 * 60 * 1000L
@@ -32,7 +32,7 @@ class CopilotQuotaService {
         private const val COPILOT_USER_API_URL = "https://api.github.com/copilot_internal/user"
 
         @JvmStatic
-        fun getInstance(): CopilotQuotaService = service()
+        fun getInstance(): com.github.intellij.plugins.github_copilot_quota_monitor.services.Service = service()
     }
 
     // ── Domain model ──────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ class CopilotQuotaService {
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private fun fetchQuota(): QuotaResult {
-        val token = GitHubAuthService.getInstance().getToken()
+        val token = AuthService.getInstance().getToken()
             ?: return QuotaResult.NoAccount(
                 "Not signed in. Open Settings → Tools → GitHub Copilot Quota Monitor to sign in."
             )
@@ -119,7 +119,7 @@ class CopilotQuotaService {
                 200 -> parseQuota(conn.inputStream.bufferedReader().readText())
                 401, 403 -> {
                     // Token is invalid or revoked — clear it so the user knows to re-authenticate
-                    GitHubAuthService.getInstance().clearAuthentication()
+                    AuthService.getInstance().clearAuthentication()
                     QuotaResult.NoAccount(
                         "GitHub token is invalid or expired (HTTP $code). " +
                         "Open Settings → Tools → GitHub Copilot Quota Monitor to sign in again."

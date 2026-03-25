@@ -1,7 +1,7 @@
 package com.github.intellij.plugins.github_copilot_quota_monitor.startup
 
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.GitHubAuthService
-import com.github.intellij.plugins.github_copilot_quota_monitor.ui.GitHubDeviceFlowDialog
+import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
+import com.github.intellij.plugins.github_copilot_quota_monitor.ui.DeviceAuthFlowDialog
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -14,14 +14,14 @@ import javax.swing.JOptionPane
  *
  * Registered via plugin.xml extension point: <projectActivity>
  */
-class CopilotSignInStartupActivity : ProjectActivity {
+class SignInStartupActivity : ProjectActivity {
 
     companion object {
-        private val LOG = Logger.getInstance(CopilotSignInStartupActivity::class.java)
+        private val LOG = Logger.getInstance(SignInStartupActivity::class.java)
     }
 
     override suspend fun execute(project: Project) {
-        val auth = GitHubAuthService.getInstance()
+        val auth = AuthService.getInstance()
         
         // Only show signin dialog if not already authenticated
         if (!auth.isAuthenticated()) {
@@ -35,9 +35,9 @@ class CopilotSignInStartupActivity : ProjectActivity {
         // Start device-code request in background
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
-                val deviceCode = GitHubAuthService.getInstance().requestDeviceCode()
+                val deviceCode = AuthService.getInstance().requestDeviceCode()
                 ApplicationManager.getApplication().invokeLater {
-                    val dlg = GitHubDeviceFlowDialog(project, deviceCode)
+                    val dlg = DeviceAuthFlowDialog(project, deviceCode)
                     dlg.show()
                 }
             } catch (e: Exception) {

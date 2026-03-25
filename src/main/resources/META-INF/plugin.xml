@@ -38,21 +38,21 @@
 
         <!-- Authentication service: OAuth Device Flow + PasswordSafe token store -->
         <applicationService
-            serviceImplementation="com.github.intellij.plugins.github_copilot_quota_monitor.services.GitHubAuthService"/>
+            serviceImplementation="com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService"/>
 
         <!-- Quota service: fetches and caches quota data -->
         <applicationService
-            serviceImplementation="com.github.intellij.plugins.github_copilot_quota_monitor.services.CopilotQuotaService"/>
+            serviceImplementation="com.github.intellij.plugins.github_copilot_quota_monitor.services.Service"/>
 
         <!-- Status bar widget factory -->
         <statusBarWidgetFactory
             id="GitHubCopilotQuotaWidget"
-            implementation="com.github.intellij.plugins.github_copilot_quota_monitor.statusbar.CopilotQuotaStatusBarWidgetFactory"
+            implementation="com.github.intellij.plugins.github_copilot_quota_monitor.statusbar.StatusBarWidgetFactory"
             order="first"/>
 
         <!-- Startup activity: shows sign-in dialog on first run if not authenticated -->
         <projectActivity
-            implementation="com.github.intellij.plugins.github_copilot_quota_monitor.startup.CopilotSignInStartupActivity"/>
+            implementation="com.github.intellij.plugins.github_copilot_quota_monitor.startup.SignInStartupActivity"/>
 
     </extensions>
 </idea-plugin>

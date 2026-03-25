@@ -10,7 +10,7 @@ import com.intellij.openapi.wm.StatusBarWidgetFactory
  * Factory that registers [CopilotQuotaStatusBarWidget] with IntelliJ's
  * status bar widget system.
  */
-class CopilotQuotaStatusBarWidgetFactory : StatusBarWidgetFactory {
+class StatusBarWidgetFactory : StatusBarWidgetFactory {
 
     override fun getId(): String = CopilotQuotaStatusBarWidget.WIDGET_ID
 

@@ -1,6 +1,6 @@
 package com.github.intellij.plugins.github_copilot_quota_monitor.ui
 
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.GitHubAuthService
+import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ide.CopyPasteManager
@@ -24,16 +24,16 @@ import javax.swing.*
  * - Polls GitHub in a background daemon thread and closes itself when auth succeeds.
  * - The caller checks [authenticated] after [show] returns.
  */
-class GitHubDeviceFlowDialog(
+class DeviceAuthFlowDialog(
     project: Project?,
-    private val response: GitHubAuthService.DeviceCodeResponse
+    private val response: AuthService.DeviceCodeResponse
 ) : DialogWrapper(project) {
 
     companion object {
-        private val LOG = Logger.getInstance(GitHubDeviceFlowDialog::class.java)
+        private val LOG = Logger.getInstance(DeviceAuthFlowDialog::class.java)
     }
 
-    private val authService = GitHubAuthService.getInstance()
+    private val authService = AuthService.getInstance()
 
     /** True when the device flow completed successfully and the token was saved. */
     var authenticated: Boolean = false
@@ -137,7 +137,7 @@ class GitHubDeviceFlowDialog(
                 }
                 try {
                     when (val r = authService.pollForToken(response.deviceCode)) {
-                        is GitHubAuthService.PollResult.Success -> {
+                        is AuthService.PollResult.Success -> {
                             authService.saveAuthentication(r.token)
                             authenticated = true
                             ApplicationManager.getApplication().invokeLater {
@@ -145,12 +145,12 @@ class GitHubDeviceFlowDialog(
                             }
                             return@Thread
                         }
-                        is GitHubAuthService.PollResult.Pending  -> { /* keep polling */ }
-                        is GitHubAuthService.PollResult.Expired  -> {
+                        is AuthService.PollResult.Pending  -> { /* keep polling */ }
+                        is AuthService.PollResult.Expired  -> {
                             updateStatus("Code expired. Please restart the sign-in flow.")
                             return@Thread
                         }
-                        is GitHubAuthService.PollResult.Error    -> {
+                        is AuthService.PollResult.Error    -> {
                             updateStatus("Error: ${r.message}")
                             return@Thread
                         }
