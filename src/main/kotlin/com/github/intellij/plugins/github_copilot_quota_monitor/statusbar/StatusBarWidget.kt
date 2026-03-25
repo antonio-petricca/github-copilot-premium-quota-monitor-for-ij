@@ -29,6 +29,12 @@ import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.SwingUtilities
 import javax.swing.Timer
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * Status bar widget that shows the remaining GitHub Copilot premium quota.
@@ -113,7 +119,11 @@ class CopilotQuotaStatusBarWidget(
         }
         label.toolTipText = when (result) {
             is PluginService.QuotaResult.Loading   -> Messages.get("statusbar_tooltip_loading")
-            is PluginService.QuotaResult.Available -> Messages.format("statusbar_tooltip_available_html", String.format("%.1f", result.quota.percentRemaining))
+            is PluginService.QuotaResult.Available -> {
+                val ts = result.quota.renewalUtc
+                val formatted = if (ts != null) formatTimestamp(ts) else ""
+                Messages.format("statusbar_tooltip_available_html", String.format("%.1f", result.quota.percentRemaining), formatted)
+            }
             is PluginService.QuotaResult.Unlimited -> Messages.get("statusbar_tooltip_unlimited")
             is PluginService.QuotaResult.NoAccount -> Messages.get("statusbar_tooltip_noaccount_html")
             is PluginService.QuotaResult.Error     -> Messages.format("statusbar_tooltip_error", result.message)
@@ -136,6 +146,27 @@ class CopilotQuotaStatusBarWidget(
 
     fun refresh() {
         PluginService.getInstance().refreshQuota { updateLabel(it) }
+    }
+
+    // Format an ISO-8601 timestamp string (UTC or with offset) into a user-friendly
+    // local date/time string. Falls back to the original string on parse errors.
+    private fun formatTimestamp(ts: String): String {
+        return try {
+            val zoned: ZonedDateTime = try {
+                Instant.parse(ts).atZone(ZoneId.systemDefault())
+            } catch (_: Exception) {
+                try {
+                    OffsetDateTime.parse(ts).toZonedDateTime().withZoneSameInstant(ZoneId.systemDefault())
+                } catch (_: Exception) {
+                    return ts
+                }
+            }
+
+            val fmt = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm z", Locale.getDefault())
+            zoned.format(fmt)
+        } catch (_: Exception) {
+            ts
+        }
     }
 }
 
