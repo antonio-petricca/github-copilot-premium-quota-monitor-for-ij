@@ -39,7 +39,7 @@ class DeviceAuthFlowDialog(
     var authenticated: Boolean = false
         private set
 
-    private lateinit var statusLabel: JBLabel
+    private var statusLabel: JBLabel? = null
     private var pollingThread: Thread? = null
 
     init {
@@ -90,55 +90,59 @@ class DeviceAuthFlowDialog(
     // ── UI ────────────────────────────────────────────────────────────────────
 
     override fun createCenterPanel(): JComponent {
-        val root = JPanel(BorderLayout(0, JBUI.scale(12)))
-        root.border = JBUI.Borders.empty(16)
-        root.preferredSize = Dimension(JBUI.scale(520), JBUI.scale(220))
+        val root = JPanel(BorderLayout(0, 16))
+        root.border = JBUI.Borders.empty(24)
+        root.preferredSize = Dimension(580, 280)
 
-        // ── Header ──────────────────────────────────────────────────────────
-        root.add(
-            JBLabel(
-                "<html>Open the URL below in your browser, enter the code, and sign in with " +
-                "your GitHub account.<br/>This dialog will close automatically when " +
-                "authentication succeeds.</html>"
-            ),
-            BorderLayout.NORTH
-        )
+        // Title section
+        val headerLabel = JBLabel("GitHub Copilot Authentication")
+        headerLabel.font = headerLabel.font.deriveFont(Font.BOLD, 14f)
+        root.add(headerLabel, BorderLayout.NORTH)
 
-        // ── Centre: URL row + code row + status ──────────────────────────────
-        val centre = JPanel()
-        centre.layout = BoxLayout(centre, BoxLayout.Y_AXIS)
+        // Content with steps
+        val contentPanel = JPanel()
+        contentPanel.layout = BoxLayout(contentPanel, BoxLayout.Y_AXIS)
+        contentPanel.border = JBUI.Borders.empty(16, 0, 0, 0)
 
-        // URL row
-        val urlField = JTextField(response.verificationUri).apply { isEditable = false }
-        val openBtn  = JButton("Open in Browser").apply {
-            addActionListener { openBrowser() }
+        // Step 1: URL
+        contentPanel.add(JBLabel("1. Open in Browser"))
+        contentPanel.add(Box.createVerticalStrut(8))
+        val urlField = JTextField(response.verificationUri)
+        urlField.isEditable = false
+        val openBrowserBtn = JButton("Open URL")
+        openBrowserBtn.addActionListener { openBrowser() }
+        val urlPanel = JPanel(BorderLayout(8, 0))
+        urlPanel.add(urlField, BorderLayout.CENTER)
+        urlPanel.add(openBrowserBtn, BorderLayout.EAST)
+        contentPanel.add(urlPanel)
+        contentPanel.add(Box.createVerticalStrut(16))
+
+        // Step 2: Code
+        contentPanel.add(JBLabel("2. Enter This Code on GitHub"))
+        contentPanel.add(Box.createVerticalStrut(8))
+        val codeLabel = JBLabel(response.userCode)
+        codeLabel.font = Font(Font.MONOSPACED, Font.BOLD, 24)
+        codeLabel.horizontalAlignment = SwingConstants.CENTER
+        codeLabel.border = JBUI.Borders.empty(12)
+        val copyBtn = JButton("Copy")
+        copyBtn.addActionListener {
+            CopyPasteManager.getInstance().setContents(StringSelection(response.userCode))
         }
-        val urlRow = JPanel(BorderLayout(JBUI.scale(4), 0))
-        urlRow.add(urlField, BorderLayout.CENTER)
-        urlRow.add(openBtn,  BorderLayout.EAST)
+        val codePanel = JPanel(BorderLayout(12, 0))
+        codePanel.border = JBUI.Borders.empty(8)
+        codePanel.add(codeLabel, BorderLayout.CENTER)
+        codePanel.add(copyBtn, BorderLayout.EAST)
+        contentPanel.add(codePanel)
+        contentPanel.add(Box.createVerticalStrut(16))
 
-        // Code row
-        val codeLabel = JBLabel(response.userCode).apply {
-            font = Font(Font.MONOSPACED, Font.BOLD, JBUI.scaleFontSize(22f))
-        }
-        val copyBtn = JButton("Copy Code").apply {
-            addActionListener {
-                CopyPasteManager.getInstance().setContents(StringSelection(response.userCode))
-            }
-        }
-        val codeRow = JPanel(BorderLayout(JBUI.scale(8), 0))
-        codeRow.add(codeLabel, BorderLayout.CENTER)
-        codeRow.add(copyBtn,   BorderLayout.EAST)
-
+        // Status label
         statusLabel = JBLabel("Waiting for authorization…")
+        statusLabel!!.font = statusLabel!!.font.deriveFont(Font.PLAIN, 10f)
+        statusLabel!!.horizontalAlignment = SwingConstants.CENTER
+        contentPanel.add(statusLabel)
+        contentPanel.add(Box.createVerticalGlue())
 
-        centre.add(urlRow)
-        centre.add(Box.createVerticalStrut(JBUI.scale(8)))
-        centre.add(codeRow)
-        centre.add(Box.createVerticalStrut(JBUI.scale(8)))
-        centre.add(statusLabel)
-
-        root.add(centre, BorderLayout.CENTER)
+        root.add(contentPanel, BorderLayout.CENTER)
         return root
     }
 
@@ -190,7 +194,7 @@ class DeviceAuthFlowDialog(
 
     private fun updateStatus(text: String) {
         ApplicationManager.getApplication().invokeLater {
-            if (::statusLabel.isInitialized) statusLabel.text = text
+            statusLabel?.text = text
         }
     }
 
