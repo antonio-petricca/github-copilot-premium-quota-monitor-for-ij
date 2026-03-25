@@ -6,7 +6,8 @@ import com.github.intellij.plugins.github_copilot_quota_monitor.ui.GitHubDeviceF
 import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.DataContext
+import com.intellij.ide.DataManager
+import com.intellij.ui.awt.RelativePoint
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -15,6 +16,7 @@ import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.CustomStatusBarWidget
 import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.util.ui.JBUI
+import java.awt.Point
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.JComponent
@@ -46,16 +48,13 @@ class CopilotQuotaStatusBarWidget(
 
     /**
      * The label that lives in the status bar.
-     * Mouse events are handled here directly — no intermediary.
+     * Left-click opens the popup menu (Refresh / Sign in or Sign out).
      */
     private val label: JLabel = JLabel("⊙ Copilot").apply {
         border = JBUI.Borders.empty(0, 4)
         addMouseListener(object : MouseAdapter() {
-            override fun mousePressed(e: MouseEvent) {
-                when {
-                    SwingUtilities.isLeftMouseButton(e)  -> refresh()
-                    SwingUtilities.isRightMouseButton(e) -> showPopupMenu(e)
-                }
+            override fun mouseClicked(e: MouseEvent) {
+                if (SwingUtilities.isLeftMouseButton(e)) showPopupMenu(e)
             }
         })
     }
@@ -105,7 +104,7 @@ class CopilotQuotaStatusBarWidget(
                 "<html>GitHub Copilot — Premium quota<br>" +
                 "Remaining: <b>${q.remaining} / ${q.total}</b><br>" +
                 "Used: ${q.used} (${String.format("%.1f", q.percentUsed)} %)<br>" +
-                "<i>Left-click to refresh · Right-click for options</i></html>"
+                "<i>Click for options</i></html>"
             }
 
             is CopilotQuotaService.QuotaResult.Unlimited ->
@@ -113,7 +112,7 @@ class CopilotQuotaStatusBarWidget(
 
             is CopilotQuotaService.QuotaResult.NoAccount ->
                 "<html>GitHub Copilot — ⚠ Not signed in.<br>" +
-                "<i>Right-click to sign in.</i></html>"
+                "<i>Click to sign in.</i></html>"
 
             is CopilotQuotaService.QuotaResult.Error ->
                 "GitHub Copilot — ✗ Error: ${result.message}"
@@ -123,15 +122,17 @@ class CopilotQuotaStatusBarWidget(
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun showPopupMenu(event: MouseEvent) {
+        val dataContext = DataManager.getInstance().getDataContext(label)
         val popup = JBPopupFactory.getInstance()
             .createActionGroupPopup(
                 null,
                 CopilotQuotaPopupGroup(project),
-                DataContext { null },
+                dataContext,
                 JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
                 false
             )
-        popup.show(event.component)
+        // Show the popup above the status bar widget
+        popup.show(RelativePoint(label, Point(0, -popup.content.preferredSize.height)))
     }
 
     private fun quotaService(): CopilotQuotaService = service()
@@ -146,18 +147,25 @@ class CopilotQuotaStatusBarWidget(
 // ── Popup Action Group ────────────────────────────────────────────────────────
 
 /**
- * Context menu shown on right-click.
- * Dynamically shows "Sign in" or "Sign out" based on authentication state.
+ * Popup menu shown on left-click.
+ * Always shows Refresh; shows Sign in or Sign out based on authentication state.
  */
 class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
 
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
         val auth = GitHubAuthService.getInstance()
-        return if (auth.isAuthenticated()) {
-            arrayOf(SignOutAction(project))
-        } else {
-            arrayOf(SignInAction(project))
-        }
+        val authAction: AnAction = if (auth.isAuthenticated()) SignOutAction(project) else SignInAction(project)
+        return arrayOf(RefreshAction(project), authAction)
+    }
+}
+
+/**
+ * Action: force an immediate quota refresh.
+ */
+class RefreshAction(private val project: Project) : AnAction("Refresh") {
+
+    override fun actionPerformed(e: AnActionEvent) {
+        CopilotQuotaService.getInstance().refreshAsync()
     }
 }
 
