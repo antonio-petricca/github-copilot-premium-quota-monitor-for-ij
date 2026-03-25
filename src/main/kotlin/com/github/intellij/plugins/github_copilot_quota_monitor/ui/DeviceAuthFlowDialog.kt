@@ -165,6 +165,9 @@ class DeviceAuthFlowDialog(
                     when (val r = authService.pollForToken(response.deviceCode)) {
                         is AuthService.PollResult.Success -> {
                             authService.saveAuthentication(r.token)
+                            // AuthService will publish an auth-state event; PluginService
+                            // subscribes to it and will refresh the quota, so we don't
+                            // need to call PluginService directly here.
                             authenticated = true
                             ApplicationManager.getApplication().invokeLater {
                                 close(OK_EXIT_CODE)

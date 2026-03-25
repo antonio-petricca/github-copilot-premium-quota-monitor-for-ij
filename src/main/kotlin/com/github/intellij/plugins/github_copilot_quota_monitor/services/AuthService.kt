@@ -8,6 +8,8 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.util.messages.MessageBus
+import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthStateNotifier
 import java.util.concurrent.atomic.AtomicReference
 import java.util.*
 import java.io.OutputStreamWriter
@@ -128,6 +130,12 @@ class AuthService {
         LOG.info("[CopilotQuotaMonitor] Fetched username=$username")
         cachedUsername.set(username)
         PasswordSafe.instance.setPassword(USERNAME_ATTRS, username)
+        // Notify listeners that auth state changed (signed in)
+        try {
+            ApplicationManager.getApplication().messageBus.syncPublisher(AuthStateNotifier.AUTH_TOPIC).authStateChanged()
+        } catch (_: Exception) {
+            // Ignore notification failures; auth state has been persisted regardless
+        }
     }
 
     /** Removes the stored token and username. */
@@ -143,6 +151,12 @@ class AuthService {
             } catch (e: Exception) {
                 LOG.warn("[CopilotQuotaMonitor] Failed to clear credentials from PasswordSafe", e)
             }
+        }
+        // Notify listeners that auth state changed (signed out)
+        try {
+            ApplicationManager.getApplication().messageBus.syncPublisher(AuthStateNotifier.AUTH_TOPIC).authStateChanged()
+        } catch (_: Exception) {
+            // best-effort
         }
     }
 

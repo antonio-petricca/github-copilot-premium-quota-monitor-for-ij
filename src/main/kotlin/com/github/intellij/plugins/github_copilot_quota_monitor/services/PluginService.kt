@@ -2,6 +2,8 @@ package com.github.intellij.plugins.github_copilot_quota_monitor.services
 
 import com.google.gson.JsonParser
 import com.intellij.openapi.application.ApplicationManager
+import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthStateNotifier
+import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthStateListener
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import java.net.HttpURLConnection
@@ -24,6 +26,24 @@ class PluginService {
 
         @JvmStatic
         fun getInstance(): PluginService = ApplicationManager.getApplication().getService(PluginService::class.java)
+    }
+
+    init {
+        // Subscribe to authentication state changes so we can refresh quota immediately
+        try {
+            ApplicationManager.getApplication().messageBus.connect().subscribe(AuthStateNotifier.AUTH_TOPIC, object : AuthStateListener {
+                override fun authStateChanged() {
+                    // Trigger an immediate refresh when auth state changes
+                    try {
+                        refreshQuota()
+                    } catch (_: Exception) {
+                        // best-effort
+                    }
+                }
+            })
+        } catch (e: Exception) {
+            LOG.warn("[CopilotQuotaMonitor] Failed to subscribe to auth state changes", e)
+        }
     }
 
     data class QuotaInfo(val used: Int, val remaining: Int, val total: Int) {
