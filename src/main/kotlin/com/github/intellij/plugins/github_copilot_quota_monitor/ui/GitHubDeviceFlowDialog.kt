@@ -47,9 +47,22 @@ class GitHubDeviceFlowDialog(
         setCancelButtonText("Cancel")
         setOKButtonText("Done")
         init()
-        // Bring dialog to foreground
+        // Porta il dialog in primo piano
         window?.isAlwaysOnTop = true
-        openBrowser()
+        // Posiziona il dialog in alto a destra rispetto alla finestra principale
+        ApplicationManager.getApplication().invokeLater {
+            val parent = window?.owner
+            if (parent != null) {
+                val screenSize = parent.graphicsConfiguration?.bounds
+                val dialogSize = window?.size
+                if (screenSize != null && dialogSize != null) {
+                    val x = screenSize.x + screenSize.width - dialogSize.width - 32
+                    val y = screenSize.y + 32
+                    window?.setLocation(x, y)
+                }
+            }
+        }
+        // Non aprire il browser automaticamente
         startPolling()
     }
 

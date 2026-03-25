@@ -138,6 +138,9 @@ class CopilotQuotaStatusBarWidget(
     private fun quotaService(): CopilotQuotaService = service()
 
     private fun refresh() {
+        // Mostra subito stato intermedio
+        label.text = "⊙ Copilot (checking…)"
+        label.toolTipText = "Checking Copilot quota…"
         quotaService().refreshAsync { result ->
             updateLabel(result)
         }
