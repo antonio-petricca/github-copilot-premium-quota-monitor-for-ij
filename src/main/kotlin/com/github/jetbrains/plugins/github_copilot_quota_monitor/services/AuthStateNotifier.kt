@@ -1,4 +1,4 @@
-package com.github.intellij.plugins.github_copilot_quota_monitor.services
+package com.github.jetbrains.plugins.github_copilot_quota_monitor.services
 
 import com.intellij.util.messages.Topic
 

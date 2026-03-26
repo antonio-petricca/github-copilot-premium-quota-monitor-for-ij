@@ -1,13 +1,13 @@
-package com.github.intellij.plugins.github_copilot_quota_monitor.statusbar
+package com.github.jetbrains.plugins.github_copilot_quota_monitor.statusbar
 
-import com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages
-import com.github.intellij.plugins.github_copilot_quota_monitor.icons.CopilotIcons
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
+import com.github.jetbrains.plugins.github_copilot_quota_monitor.i18n.Messages
+import com.github.jetbrains.plugins.github_copilot_quota_monitor.icons.CopilotIcons
+import com.github.jetbrains.plugins.github_copilot_quota_monitor.services.AuthService
 import com.intellij.icons.AllIcons
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.PluginService
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.QuotaListener
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.QuotaNotifier
-import com.github.intellij.plugins.github_copilot_quota_monitor.ui.DeviceAuthFlowDialog
+import com.github.jetbrains.plugins.github_copilot_quota_monitor.services.PluginService
+import com.github.jetbrains.plugins.github_copilot_quota_monitor.services.QuotaListener
+import com.github.jetbrains.plugins.github_copilot_quota_monitor.services.QuotaNotifier
+import com.github.jetbrains.plugins.github_copilot_quota_monitor.ui.DeviceAuthFlowDialog
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.AnAction

@@ -1,7 +1,7 @@
-package com.github.intellij.plugins.github_copilot_quota_monitor.ui
+package com.github.jetbrains.plugins.github_copilot_quota_monitor.ui
 
-import com.github.intellij.plugins.github_copilot_quota_monitor.i18n.Messages
-import com.github.intellij.plugins.github_copilot_quota_monitor.services.AuthService
+import com.github.jetbrains.plugins.github_copilot_quota_monitor.i18n.Messages
+import com.github.jetbrains.plugins.github_copilot_quota_monitor.services.AuthService
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger

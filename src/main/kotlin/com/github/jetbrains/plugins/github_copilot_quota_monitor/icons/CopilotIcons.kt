@@ -1,4 +1,4 @@
-package com.github.intellij.plugins.github_copilot_quota_monitor.icons
+package com.github.jetbrains.plugins.github_copilot_quota_monitor.icons
 
 import com.intellij.openapi.util.IconLoader
 
