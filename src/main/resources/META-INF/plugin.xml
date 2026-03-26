@@ -12,7 +12,7 @@
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
-    <description>
+    <description><![CDATA[
         GitHub Copilot Premium Quota Monitor is an IntelliJ Platform plugin that helps you track your remaining GitHub Copilot premium model quota directly from the IDE status bar.
 
         Key features:
@@ -28,10 +28,10 @@
         A GitHub account with an active Copilot subscription is required. The plugin is independent from the official GitHub Copilot plugin and works with all compatible JetBrains IDEs.
 
         Easy to use, secure, and designed to keep you informed about your Copilot premium usage at a glance.
-    </description>
-    <change-notes>
+    ]]></description>
+    <change-notes><![CDATA[
         Initial version.
-    </change-notes>
+    ]]></change-notes>
 
     <!-- Only the IntelliJ Platform base module is required.
          This makes the plugin compatible with all IntelliJ-based IDEs
