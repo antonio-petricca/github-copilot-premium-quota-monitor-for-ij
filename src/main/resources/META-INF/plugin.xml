@@ -12,7 +12,21 @@
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
-    <description>Monitors and displays the remaining GitHub Copilot premium model quota directly in the IDE status bar. Supports OAuth Device Flow authentication and auto-refresh.</description>
+    <description>
+        GitHub Copilot Premium Quota Monitor is an IntelliJ Platform plugin that displays your remaining GitHub Copilot Premium quota directly in the IDE status bar.
+
+        Main features:
+        - Status bar widget showing the remaining premium quota as a percentage, with color-coded urgency.
+        - Tooltip with detailed quota information, including remaining requests and renewal date.
+        - Manual and automatic background refresh of quota data.
+        - Quick actions via widget popup: Refresh, Sign in, Sign out.
+        - OAuth Device Flow authentication for secure GitHub sign-in, with tokens stored in PasswordSafe.
+        - Visual states for loading, unlimited plans, unauthenticated and error conditions.
+        - Full support for JetBrains IDEs (IntelliJ IDEA, PyCharm, WebStorm, GoLand, etc.).
+        - Localization support (English and Italian included).
+
+        A GitHub account with an active Copilot subscription is required to retrieve quota information. The plugin is independent from the official GitHub Copilot plugin and works with all compatible JetBrains IDEs.
+    </description>
 
     <!-- Only the IntelliJ Platform base module is required.
          This makes the plugin compatible with all IntelliJ-based IDEs
