@@ -1,6 +1,6 @@
-package com.github.jetbrains.plugins.github_copilot_quota_monitor.statusbar
+package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.statusbar
 
-import com.github.jetbrains.plugins.github_copilot_quota_monitor.i18n.Messages
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.StatusBar

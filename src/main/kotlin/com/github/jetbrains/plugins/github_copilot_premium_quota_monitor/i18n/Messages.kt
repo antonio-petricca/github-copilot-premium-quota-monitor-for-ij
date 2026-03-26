@@ -1,4 +1,4 @@
-package com.github.jetbrains.plugins.github_copilot_quota_monitor.i18n
+package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n
 
 import com.intellij.openapi.diagnostic.Logger
 import java.text.MessageFormat

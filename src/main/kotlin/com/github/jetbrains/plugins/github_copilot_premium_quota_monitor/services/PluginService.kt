@@ -1,6 +1,6 @@
-package com.github.jetbrains.plugins.github_copilot_quota_monitor.services
+package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services
 
-import com.github.jetbrains.plugins.github_copilot_quota_monitor.i18n.Messages
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
 import com.google.gson.JsonParser
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service

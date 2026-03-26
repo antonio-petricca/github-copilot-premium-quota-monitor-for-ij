@@ -1,8 +1,8 @@
-package com.github.jetbrains.plugins.github_copilot_quota_monitor.startup
+package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.startup
 
-import com.github.jetbrains.plugins.github_copilot_quota_monitor.i18n.Messages
-import com.github.jetbrains.plugins.github_copilot_quota_monitor.services.AuthService
-import com.github.jetbrains.plugins.github_copilot_quota_monitor.ui.DeviceAuthFlowDialog
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.AuthService
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.ui.DeviceAuthFlowDialog
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
