@@ -9,12 +9,9 @@ plugins {
 // ── Properties from gradle.properties ────────────────────────────────────────
 val pluginGroup: String by project
 val pluginVersion: String by project
-val pluginName: String by project
-val pluginDescription: String by project
 val platformVersion: String by project
 val pluginSinceBuild: String by project
 val javaVersion: String by project
-val pluginChangeNotes: String by project
 
 group   = pluginGroup
 version = pluginVersion
@@ -40,13 +37,11 @@ dependencies {
 
 intellijPlatform {
     pluginConfiguration {
-        name        = pluginName
-        description = pluginDescription
         ideaVersion {
             sinceBuild = pluginSinceBuild
             // untilBuild is intentionally left unset to allow all future builds
         }
-        changeNotes = pluginChangeNotes
+        // name, description e changeNotes sono ora gestiti in plugin.xml
     }
 }
 
