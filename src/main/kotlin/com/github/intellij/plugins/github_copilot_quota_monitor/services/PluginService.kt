@@ -43,11 +43,17 @@ class PluginService {
 
     // ── Domain types ──────────────────────────────────────────────────────────
 
-    // percentRemaining and optional renewalUtc (ISO-8601 UTC timestamp from API: "timestamp_utc").
-    data class QuotaInfo(val percentRemaining: Double, val renewalUtc: String? = null) {
-        constructor(used: Int, remaining: Int, total: Int, renewalUtc: String? = null) : this(
+    // percentRemaining, optional renewalDate
+    // and optional numeric quotaRemaining (the raw remaining units, e.g. interactions).
+    data class QuotaInfo(
+        val percentRemaining: Double,
+        val renewalDate: String? = null,
+        val quotaRemaining: Double? = null,
+    ) {
+        constructor(used: Int, remaining: Int, total: Int, renewalDate: String? = null) : this(
             if (total > 0) remaining.toDouble() / total * 100.0 else 0.0,
-            renewalUtc
+            renewalDate,
+            remaining.toDouble()
         )
     }
 
@@ -140,7 +146,11 @@ class PluginService {
                     val pct = premium["percent_remaining"]?.asDouble
                     if (pct != null) {
                         val unlimited = premium["unlimited"]?.asBoolean ?: false
-                        return if (unlimited) QuotaResult.Unlimited else QuotaResult.Available(QuotaInfo(pct, quotaReset))
+                        val quotaRem = premium["quota_remaining"]?.asDouble
+                        return if (unlimited)
+                            QuotaResult.Unlimited
+                        else
+                            QuotaResult.Available(QuotaInfo(pct, quotaReset, quotaRem))
                     }
                 }
 
