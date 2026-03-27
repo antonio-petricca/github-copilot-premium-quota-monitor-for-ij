@@ -6,6 +6,8 @@ plugins {
     id("org.jetbrains.intellij.platform")
 }
 
+// Blocco pluginVerification rimosso temporaneamente per evitare errori di compilazione
+
 // ── Properties from gradle.properties ────────────────────────────────────────
 val pluginGroup: String by project
 val pluginVersion: String by project
