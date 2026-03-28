@@ -13,7 +13,6 @@ works with IntelliJ IDEA Community and other JetBrains IDEs.
 - Plugin ID: `com.github.intellij.plugins.github_copilot_quota_monitor.github-copilot-premium-quota-monitor-for-ij`
 - Package / group: `com.github.intellij.plugins.github_copilot_quota_monitor`
 - Plugin name: `GitHub Copilot - Premium Quota Monitor`
-- Version: `0.0.2`
 - Vendor / Author: Antonio Petricca
 - IntelliJ platform target: `2025.2.4` (build 252)
 - Java target: `21`
