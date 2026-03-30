@@ -205,8 +205,10 @@ class DeviceAuthFlowDialog(
             addActionListener { openBrowser() }
         }
 
-        return card(JBUI.scale(8), JBUI.scale(16)).apply {
-            maximumSize = Dimension(Int.MAX_VALUE, JBUI.scale(40))
+        // Use same vertical padding and maximum height as the code card so the
+        // "Open in Browser" button has the same visual height as "Copy Code".
+        return card(JBUI.scale(12), JBUI.scale(16)).apply {
+            maximumSize = Dimension(Int.MAX_VALUE, JBUI.scale(56))
             add(urlLabel,   BorderLayout.CENTER)
             add(openButton, BorderLayout.EAST)
         }
