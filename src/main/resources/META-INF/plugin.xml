@@ -40,10 +40,11 @@
                 <br/>
                 <ul>
                     <li>Added and improved translations for multiple languages: French (fr), Spanish (es), German (de), Portuguese (pt), Chinese - Simplified (zh), Japanese (ja), Russian (ru) and Italian (it).</li>
-                    <li>Localization: standardized the sign-in dialog header and statusbar labels to use "GitHub CoPilot" across all translations for consistency.</li>
-                    <li>UI: made the "Open in Browser" button in the sign-in dialog match the height of the "Copy Code" button for a consistent appearance.</li>
                     <li>Clarified in the description, README, and messages that left-click on the widget opens the quick actions popup; the refresh action must be selected from that menu.</li>
                     <li>Improved change log and various minor UI/localization fixes.</li>
+                    <li>Localization: standardized the sign-in dialog header and statusbar labels to use "GitHub CoPilot" across all translations for consistency.</li>
+                    <li>Made the "Open in Browser" button in the sign-in dialog match the height of the "Copy Code" button for a consistent appearance.</li>
+                    <li>Replaced the "Sign in" and "Sign out" popup action icons with standard IDE icons to better match platform conventions and avoid using the plugin logo.</li>
                 </ul>
             </p>
             <p>

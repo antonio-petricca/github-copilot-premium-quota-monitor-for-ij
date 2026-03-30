@@ -228,7 +228,8 @@ class RefreshAction : AnAction(
 class SignInAction(private val project: Project) : AnAction(
     Messages.get("statusbar_action_signin"),
     null,
-    CopilotIcons.Logo,
+    // Usa una icona standard disponibile per il login (utente generico)
+    AllIcons.General.User,
 ) {
 
     override fun actionPerformed(e: AnActionEvent) {
@@ -257,6 +258,7 @@ class SignInAction(private val project: Project) : AnAction(
 class SignOutAction : AnAction(
     Messages.get("statusbar_action_signout"),
     null,
+    // Usa una icona standard di uscita/logout compatibile con tutte le versioni
     AllIcons.Actions.Exit,
 ) {
 
