@@ -197,7 +197,20 @@ Use `./gradlew runIde` to start an isolated instance of the target IDE where you
 
 ## Localization
 
-This plugin ships with a resource bundle (`messages.properties`) and includes an Italian translation (`messages_it.properties`) under `src/main/resources`.
+This plugin ships with a resource bundle (`messages.properties`) and includes translations for:
+
+- Albanian (`messages_sq.properties`)
+- Chinese (`messages_zh.properties`)
+- English (default)
+- French (`messages_fr.properties`)
+- German (`messages_de.properties`)
+- Italian (`messages_it.properties`)
+- Japanese (`messages_ja.properties`)
+- Portuguese (`messages_pt.properties`)
+- Russian (`messages_ru.properties`)
+- Spanish (`messages_es.properties`)
+- Turkish (`messages_tr.properties`)
+
 To add or update translations, add `messages_xx.properties` files and provide translations for the existing keys.
 
 ---

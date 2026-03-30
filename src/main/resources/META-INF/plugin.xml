@@ -47,7 +47,8 @@
                     <li>Localization: standardized the sign-in dialog header and status bar labels to use "GitHub CoPilot" across all translations for consistency.</li>
                     <li>Made the "Open in Browser" button in the sign-in dialog match the height of the "Copy Code" button for a consistent appearance.</li>
                     <li>Replaced the "Sign in" and "Sign out" popup action icons with standard IDE icons to better match platform conventions and avoid using the plugin logo.</li>
-                    <li>Translations added and improved for: Chinese (zh), French (fr), German (de), Italian (it), Japanese (ja), Portuguese (pt), Russian (ru), and Spanish (es).</li>
+                    <li>Translations added and improved for: Chinese (zh), French (fr), German (de), Italian (it), Japanese (ja), Portuguese (pt), Russian (ru), Spanish (es).</li>
+                    <li><b>New languages: Albanian (sq) and Turkish (tr) fully supported.</b></li>
                 </ul>
             </p>
             <p>
