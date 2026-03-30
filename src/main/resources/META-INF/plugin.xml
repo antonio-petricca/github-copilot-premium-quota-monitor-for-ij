@@ -20,7 +20,7 @@
               <li>Real-time status bar widget showing the remaining premium quota as a percentage, with color-coded urgency levels.</li>
               <li>Tooltip with detailed quota information, including remaining requests and renewal date.</li>
               <li>Manual and automatic background updates of quota data.</li>
-              <li>Quick actions via widget popup: Refresh, Sign In, Sign Out.</li>
+              <li>Quick actions via widget popup (left-click): Refresh, Sign In, Sign Out.</li>
               <li>Secure authentication via OAuth Device Flow, with tokens stored in PasswordSafe.</li>
               <li>Visual feedback for loading, unlimited plans, unauthenticated state, and errors.</li>
               <li>Full compatibility with all JetBrains IDEs (IntelliJ IDEA, PyCharm, WebStorm, GoLand, etc.).</li>
@@ -29,7 +29,7 @@
 
             <p>A GitHub account with an active Copilot subscription is required. The plugin is independent from the official GitHub Copilot plugin and works with all compatible JetBrains IDEs.</p>
 
-            <p>Simple to use, secure, and designed to keep you informed about your Copilot premium quota usage at a glance.</p>
+            <p>Simple to use, secure, and designed to keep you informed about your Copilot premium quota usage at a glance. Use left-click on the widget for quick actions.</p>
         ]]>
     </description>
 
@@ -39,6 +39,7 @@
                 <strong>Version 1.0.1</strong>
                 <br/>
                 <ul>
+                    <li>Better explained left-click actions to the status bar widget for quick access to refresh, sign in, and sign out functionalities.</li>
                     <li>Improved change log.</li>
                 </ul>
             </p>

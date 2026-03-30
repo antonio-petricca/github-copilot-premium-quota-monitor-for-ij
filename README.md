@@ -103,11 +103,11 @@ This plugin uses GitHub's OAuth Device Flow (RFC 8628).
 
 Steps:
 
-1. If not authenticated, right-click the status bar widget and choose **Sign in with GitHub**, or open the IDE after installing the plugin — the sign-in dialog will appear automatically.
+1. If not authenticated, left-click the status bar widget and choose **Sign in with GitHub**, or open the IDE after installing the plugin — the sign-in dialog will appear automatically.
 2. The dialog shows a one-time device code and a link to GitHub's device authorization page.
 3. Enter the code on GitHub to authorize the plugin. The plugin polls GitHub until authorization is complete and stores the access token securely in PasswordSafe.
 
-To sign out: right-click the widget → **Sign out**.
+To sign out: left-click the widget → **Sign out**.
 
 ---
 
@@ -115,7 +115,7 @@ To sign out: right-click the widget → **Sign out**.
 
 - The widget appears in the IDE status bar showing remaining quota as a percentage (e.g. `⊙ 50%`).
 - Hover to see the tooltip with remaining requests and renewal date.
-- Click or right-click the widget for quick actions: `Refresh`, `Sign in with GitHub`, `Sign out`.
+- Click the widget for quick actions: `Refresh`, `Sign in with GitHub`, `Sign out`.
 
 ---
 
