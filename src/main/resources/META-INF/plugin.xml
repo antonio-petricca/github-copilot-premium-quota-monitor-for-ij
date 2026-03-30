@@ -35,7 +35,20 @@
 
     <change-notes>
         <![CDATA[
-            <p>Initial version.</p>
+            <p>
+                <strong>Version 1.0.1</strong>
+                <br/>
+                <ul>
+                    <li>Improved change log.</li>
+                </ul>
+            </p>
+            <p>
+                <strong>Version 1.0.0</strong>
+                <br/>
+                <ul>
+                    <li>Initial release with core features: status bar widget, quota monitoring, authentication, and basic UI.</li>
+                </ul>
+            </p>
         ]]>
     </change-notes>
 
