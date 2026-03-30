@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Application service responsible for fetching and caching GitHub Copilot
- * premium quota data.  Authentication is delegated to [AuthService].
+ * premium quota data. Authentication is delegated to [AuthService].
  */
 @Service(Service.Level.APP)
 class PluginService {
@@ -68,7 +68,7 @@ class PluginService {
         data class  Error(val message: String)      : QuotaResult()
     }
 
-    // ── State ─────────────────────────────────────────────────────────────────
+    // ── State ────────────────────────────────────────────────────────────────
 
     private val cachedResultRef = AtomicReference<QuotaResult>(QuotaResult.Loading)
     private val lastFetchTime   = AtomicLong(0L)
@@ -101,7 +101,7 @@ class PluginService {
         }
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+    // ── Private helpers ──────────────────────────────────────────────────────
 
     private fun fetchQuota(): QuotaResult {
         val token = AuthService.getInstance().getToken()

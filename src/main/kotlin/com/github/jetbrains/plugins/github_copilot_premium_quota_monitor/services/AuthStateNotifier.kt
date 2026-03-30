@@ -14,4 +14,3 @@ object AuthStateNotifier {
     @JvmField
     val AUTH_TOPIC: Topic<AuthStateListener> = Topic.create("GitHubCopilotQuotaMonitor.AuthState", AuthStateListener::class.java)
 }
-

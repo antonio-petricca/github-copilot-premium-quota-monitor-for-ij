@@ -45,6 +45,7 @@
                     <li>"Interactions" value in the status bar tooltip is now rounded to the nearest integer.</li>
                     <li>"Open in Browser" button now matches "Copy Code" button height.</li>
                     <li>Popup "Sign in" and "Sign out" icons replaced with standard IDE icons.</li>
+                    <li>Source code cleanup and formatting improvements.</li>
                     <li>Status bar tooltip: label changed from "Quota:" to "Remaining quota:" (and equivalent in all languages).</li>
                     <li>Status bar tooltip widened for improved readability.</li>
                     <li>Translations added/updated/improved: Albanian (sq), Chinese (zh), French (fr), German (de), Italian (it), Japanese (ja), Portuguese (pt), Russian (ru), Spanish (es) and Turkish (tr).</li>

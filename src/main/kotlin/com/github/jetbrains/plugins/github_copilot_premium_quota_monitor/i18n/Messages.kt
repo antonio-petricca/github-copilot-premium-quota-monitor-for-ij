@@ -9,7 +9,7 @@ object Messages {
     private val BUNDLE: ResourceBundle = ResourceBundle.getBundle("messages")
 
     /**
-     * Returns the localised string for [key].
+     * Returns the localized string for [key].
      * If the key is not found in the bundle, logs an error and returns `"[key]"` as fallback.
      */
     fun get(key: String): String {
@@ -22,7 +22,7 @@ object Messages {
     }
 
     /**
-     * Formats the localised string for [key] with the given [args].
+     * Formats the localized string for [key] with the given [args].
      * If the key is missing or formatting fails, logs an error and returns `"[key]"` as fallback.
      */
     fun format(key: String, vararg args: Any?): String {
@@ -34,4 +34,3 @@ object Messages {
         }
     }
 }
-
