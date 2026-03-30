@@ -39,6 +39,7 @@
                 <strong>Version 1.0.1</strong>
                 <br/>
                 <ul>
+                    <li>Added translations for multiple languages: French (fr), Spanish (es), German (de), Portuguese (pt), Chinese - Simplified (zh), Japanese (ja), Russian (ru).</li>
                     <li>Clarified in the description, README, and messages that left-click on the widget opens the quick actions popup, and refresh is performed only by selecting the "Refresh" action from the menu.</li>
                     <li>Improved change log.</li>
                 </ul>
