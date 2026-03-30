@@ -129,7 +129,7 @@ class CopilotQuotaStatusBarWidget(
             is PluginService.QuotaResult.Available -> {
                 val ts = result.quota.renewalDate
                 val formatted = if (ts != null) formatTimestamp(ts) else ""
-                val interactions = result.quota.quotaRemaining?.let { String.format("%.1f", it) } ?: ""
+                val interactions = result.quota.quotaRemaining?.let { String.format("%.0f", it) } ?: ""
                 Messages.format("statusbar_tooltip_html", String.format("%.1f", result.quota.percentRemaining), formatted, interactions)
             }
             is PluginService.QuotaResult.Unlimited -> Messages.get("statusbar_tooltip_unlimited")

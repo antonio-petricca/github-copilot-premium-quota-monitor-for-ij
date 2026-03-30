@@ -43,9 +43,10 @@
                     <li>Automatic build and test passed successfully.</li>
                     <li>Clarified in description, README, and messages that left-click opens the quick actions menu; refresh must be selected from the menu.</li>
                     <li>Consistency: sign-in dialog header and status bar labels now use "GitHub CoPilot" in all languages.</li>
+                    <li>"Interactions" value in the status bar tooltip is now rounded to the nearest integer.</li>
                     <li>New languages fully supported: Albanian (sq) and Turkish (tr).</li>
-                    <li>Popup "Sign in" and "Sign out" icons replaced with standard IDE icons.</li>
                     <li>"Open in Browser" button now matches "Copy Code" button height.</li>
+                    <li>Popup "Sign in" and "Sign out" icons replaced with standard IDE icons.</li>
                     <li>Status bar tooltip: label changed from "Quota:" to "Remaining quota:" (and equivalent in all languages).</li>
                     <li>Status bar tooltip widened for improved readability.</li>
                     <li>Translations updated/improved: Chinese (zh), French (fr), German (de), Italian (it), Japanese (ja), Portuguese (pt), Russian (ru), Spanish (es).</li>
