@@ -46,6 +46,7 @@
                     <li>New languages fully supported: Albanian (sq) and Turkish (tr).</li>
                     <li>Popup "Sign in" and "Sign out" icons replaced with standard IDE icons.</li>
                     <li>"Open in Browser" button now matches "Copy Code" button height.</li>
+                    <li>Status bar tooltip: label changed from "Quota:" to "Remaining quota:" (and equivalent in all languages).</li>
                     <li>Status bar tooltip widened for improved readability.</li>
                     <li>Translations updated/improved: Chinese (zh), French (fr), German (de), Italian (it), Japanese (ja), Portuguese (pt), Russian (ru), Spanish (es).</li>
                 </ul>
