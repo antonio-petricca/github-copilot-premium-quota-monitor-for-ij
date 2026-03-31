@@ -33,4 +33,14 @@ object Messages {
             "[$key]"
         }
     }
+
+    /**
+     * Returns the locale resolved by the active messages bundle.
+     * Falls back to [Locale.getDefault] when the bundle resolves to the root
+     * (i.e. its locale has an empty language tag).
+     */
+    fun locale(): Locale {
+        val l = BUNDLE.locale
+        return if (l.language.isEmpty()) Locale.getDefault() else l
+    }
 }

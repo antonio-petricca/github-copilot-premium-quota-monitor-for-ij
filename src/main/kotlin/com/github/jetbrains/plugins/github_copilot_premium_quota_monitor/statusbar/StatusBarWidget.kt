@@ -32,11 +32,12 @@ import javax.swing.JLabel
 import javax.swing.SwingUtilities
 import javax.swing.Timer
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.time.format.FormatStyle
 
 /**
  * Status bar widget that shows the remaining GitHub Copilot premium quota.
@@ -178,23 +179,39 @@ class CopilotQuotaStatusBarWidget(
         PluginService.getInstance().refreshQuota { updateLabel(it) }
     }
 
-    // Format an ISO-8601 timestamp string (UTC or with offset) into a user-friendly
-    // local date/time string. Falls back to the original string on parse errors.
+    // Format an ISO-8601 timestamp string into the current locale date/time format.
+    // Falls back to the original string on parse errors.
     @Suppress("unused")
     private fun formatTimestamp(ts: String): String {
         return try {
-            val zoned: ZonedDateTime = try {
+            val locale = Messages.locale()
+
+            // Try full timestamp: Instant (UTC) → ZonedDateTime
+            val zoned: ZonedDateTime? = try {
                 Instant.parse(ts).atZone(ZoneId.systemDefault())
             } catch (_: Exception) {
+                // Try timestamp with offset (OffsetDateTime)
                 try {
                     OffsetDateTime.parse(ts).toZonedDateTime().withZoneSameInstant(ZoneId.systemDefault())
                 } catch (_: Exception) {
-                    return ts
+                    null
                 }
             }
 
-            val fmt = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm z", Locale.getDefault())
-            zoned.format(fmt)
+            if (zoned != null) {
+                return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                    .withLocale(locale)
+                    .format(zoned)
+            }
+
+            // Try date-only (e.g. "2026-03-31")
+            try {
+                return DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                    .withLocale(locale)
+                    .format(LocalDate.parse(ts))
+            } catch (_: Exception) {}
+
+            ts // last-resort fallback: return raw string
         } catch (_: Exception) {
             ts
         }

@@ -48,6 +48,7 @@
                     <li>Source code cleanup and formatting improvements.</li>
                     <li>Status bar tooltip: interactions now show "X of Y calls" when the total quota is available, otherwise "X calls".</li>
                     <li>Status bar tooltip: label changed from "Quota:" to "Remaining quota:" (and equivalent in all languages).</li>
+                    <li>Status bar tooltip: renewal date is now formatted according to the active UI locale.</li>
                     <li>Status bar tooltip widened for improved readability.</li>
                     <li>Translations added/updated/improved: Albanian (sq), Chinese (zh), French (fr), German (de), Italian (it), Japanese (ja), Portuguese (pt), Russian (ru), Spanish (es) and Turkish (tr).</li>
                 </ul>
