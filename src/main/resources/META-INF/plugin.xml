@@ -30,6 +30,14 @@
             <p>A GitHub account with an active Copilot subscription is required. The plugin is independent from the official GitHub Copilot plugin and works with all compatible JetBrains IDEs.</p>
 
             <p>Simple to use, secure, and designed to keep you informed about your Copilot premium quota usage at a glance. Use left-click on the widget to open the quick actions menu.</p>
+
+            <p><strong>Credits:</strong> Special thanks to the contributors who helped improve this plugin:
+              <ul>
+                <li><a href="https://github.com/Fabio-Pelliccia">Fabio Pelliccia</a></li>
+                <li><a href="https://github.com/mambrosino">Massimo Ambrosino</a></li>
+                <li><a href="https://github.com/Enzo88">Vincenzo Pimpinella</a></li>
+              </ul>
+            </p>
         ]]>
     </description>
 
@@ -42,6 +50,7 @@
                     <li>Automatic build and test passed successfully.</li>
                     <li>Clarified in description, README, and messages that left-click opens the quick actions menu; refresh must be selected from the menu.</li>
                     <li>Consistency: sign-in dialog header and status bar labels now use "GitHub CoPilot" in all languages.</li>
+                    <li>Contributors added to the plugin description: Fabio Pelliccia, Massimo Ambrosino, and Vincenzo Pimpinella.</li>
                     <li>"Interactions" value in the status bar tooltip is now rounded to the nearest integer.</li>
                     <li>"Open in Browser" button now matches "Copy Code" button height.</li>
                     <li>Popup "Sign in" and "Sign out" icons replaced with standard IDE icons.</li>
