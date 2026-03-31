@@ -36,10 +36,9 @@
     <change-notes>
         <![CDATA[
             <p>
-                <strong>Version 1.0.1</strong>
+                <strong>Version 1.0.3</strong>
                 <br/>
                 <ul>
-                    <li>Automatic build and test passed successfully.</li>
                     <li>Clarified in description, README, and messages that left-click opens the quick actions menu; refresh must be selected from the menu.</li>
                     <li>Consistency: sign-in dialog header and status bar labels now use "GitHub CoPilot" in all languages.</li>
                     <li>"Interactions" value in the status bar tooltip is now rounded to the nearest integer.</li>
