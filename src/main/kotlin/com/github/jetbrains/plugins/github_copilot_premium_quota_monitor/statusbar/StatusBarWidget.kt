@@ -7,6 +7,9 @@ import com.intellij.icons.AllIcons
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.PluginService
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.QuotaListener
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.QuotaNotifier
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettings
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.SettingsChangeListener
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.SettingsChangeNotifier
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.ui.DeviceAuthFlowDialog
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.ActionGroup
@@ -77,8 +80,8 @@ class CopilotQuotaStatusBarWidget(
     // Keep the default foreground so we can restore it for non-percent states.
     private val defaultLabelForeground = label.foreground
 
-    /** Background refresh every 5 minutes. */
-    private val refreshTimer = Timer(5 * 60 * 1_000) { refresh() }.apply {
+    /** Background refresh – interval is read from [PluginSettings] and can be changed at runtime. */
+    private val refreshTimer = Timer(PluginSettings.getInstance().refreshIntervalMinutes * 60 * 1_000) { refresh() }.apply {
         isRepeats  = true
         isCoalesce = true
     }
@@ -101,6 +104,14 @@ class CopilotQuotaStatusBarWidget(
             busConnection?.subscribe(QuotaNotifier.QUOTA_TOPIC, object : QuotaListener {
                 override fun quotaUpdated(result: PluginService.QuotaResult) {
                     ApplicationManager.getApplication().invokeLater { updateLabel(result) }
+                }
+            })
+            busConnection?.subscribe(SettingsChangeNotifier.SETTINGS_TOPIC, SettingsChangeListener {
+                val newDelayMs = PluginSettings.getInstance().refreshIntervalMinutes * 60 * 1_000
+                SwingUtilities.invokeLater {
+                    refreshTimer.delay        = newDelayMs
+                    refreshTimer.initialDelay = newDelayMs
+                    refreshTimer.restart()
                 }
             })
         } catch (_: Exception) { /* best-effort */ }

@@ -40,7 +40,7 @@ works with IntelliJ IDEA Community and other JetBrains IDEs.
 ## Features
 
 - Status bar widget that shows remaining premium quota as a percentage (for example: `⊙ 50%`).
-- Automatic background refresh (default: every 5 minutes).
+- Automatic background refresh (default: every 5 minutes) can be customized by the IDE settings dialog.
 - Manual refresh via click or context menu.
 - Tooltip with detailed quota information and quick actions.
 - OAuth Device Flow authentication (no redirect URI required).

@@ -48,6 +48,7 @@
                 <br/>
                 <ul>
                     <li>Added contributor credits in plugin description (Fabio Pelliccia, Massimo Ambrosino, Vincenzo Pimpinella) and performed general source cleanup/formatting improvements.</li>
+                    <li>Automatic background refresh (default 5 minutes) now can be customized by IDE settings dialog.</li>
                     <li>Enhanced usage details in tooltip: interactions now display "X of Y calls" when total quota is available, otherwise "X calls".</li>
                     <li>Improved UI consistency: standard IDE icons for popup "Sign in" / "Sign out", and aligned "Open in Browser" button height with "Copy Code".</li>
                     <li>Improved widget UX clarity: left-click behavior is now clearly documented across description, README, and in-plugin messages (opens quick actions; refresh is a menu action).</li>
@@ -75,6 +76,16 @@
     <!-- Extensions defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+
+        <!-- Application-level settings service (persists refresh interval, etc.) -->
+        <applicationService
+            serviceImplementation="com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettings"/>
+
+        <!-- Settings panel under Settings → Tools -->
+        <applicationConfigurable
+            parentId="tools"
+            instance="com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettingsConfigurable"
+            id="com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettingsConfigurable"/>
 
         <!-- Status bar widget factory -->
         <statusBarWidgetFactory
