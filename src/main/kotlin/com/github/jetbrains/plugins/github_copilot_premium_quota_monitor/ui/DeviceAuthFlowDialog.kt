@@ -226,7 +226,10 @@ class DeviceAuthFlowDialog(
         Timer(COPY_FEEDBACK_DELAY_MS) {
             button.text = Messages.get("deviceauth_copy")
             button.icon = AllIcons.Actions.Copy
-        }.also { it.isRepeats = false; it.start() }
+        }.apply {
+            isRepeats = false
+            start()
+        }
     }
 
     // Polling
@@ -268,13 +271,13 @@ class DeviceAuthFlowDialog(
                 }
             }
             updateStatus(Messages.get("deviceauth_code_expired"), error = true)
-        }.also {
-            it.isDaemon = true
-            it.start()
+        }.apply {
+            isDaemon = true
+            start()
         }
     }
 
-    private fun updateStatus(text: String, error: Boolean = false) {
+    private fun updateStatus(text: String, error: Boolean) {
         ApplicationManager.getApplication().invokeLater {
             countdownTimer.stop()
             statusLabel?.apply {

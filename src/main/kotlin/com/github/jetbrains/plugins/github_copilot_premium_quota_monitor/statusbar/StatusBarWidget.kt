@@ -3,7 +3,6 @@ package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.status
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.icons.CopilotIcons
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.AuthService
-import com.intellij.icons.AllIcons
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.PluginService
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.QuotaListener
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.QuotaNotifier
@@ -12,6 +11,7 @@ import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.setting
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.SettingsChangeListener
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.SettingsChangeNotifier
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.ui.DeviceAuthFlowDialog
+import com.intellij.icons.AllIcons
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.AnAction
@@ -25,18 +25,14 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.wm.CustomStatusBarWidget
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
+import com.intellij.ui.JBColor
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
-import com.intellij.ui.JBColor
 import java.awt.Color
 import java.awt.Point
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.SwingUtilities
-import javax.swing.Timer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -44,6 +40,10 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.SwingUtilities
+import javax.swing.Timer
 
 /**
  * Status bar widget that shows the remaining GitHub Copilot premium quota.
@@ -198,7 +198,6 @@ class CopilotQuotaStatusBarWidget(
 
     // Format an ISO-8601 timestamp string into the current locale date/time format.
     // Falls back to the original string on parse errors.
-    @Suppress("unused")
     private fun formatTimestamp(ts: String): String {
         return try {
             val locale = Messages.locale()
@@ -273,7 +272,6 @@ class RefreshAction : AnAction(
 class SignInAction(private val project: Project) : AnAction(
     Messages.get("statusbar_action_signin"),
     null,
-    // Usa una icona standard disponibile per il login (utente generico)
     AllIcons.General.User,
 ) {
 
@@ -303,17 +301,14 @@ class SignInAction(private val project: Project) : AnAction(
 class SignOutAction : AnAction(
     Messages.get("statusbar_action_signout"),
     null,
-    // Usa una icona standard di uscita/logout compatibile con tutte le versioni
     AllIcons.Actions.Exit,
 ) {
 
     override fun actionPerformed(e: AnActionEvent) {
-        val auth     = AuthService.getInstance()
-        val username = auth.getSavedUsername()
-        val msg      = if (username != null)
-            Messages.format("statusbar_signout_confirm_when_username", username)
-        else
-            Messages.get("statusbar_signout_confirm_no_username")
+        val auth = AuthService.getInstance()
+        val msg  = auth.getSavedUsername()
+            ?.let { Messages.format("statusbar_signout_confirm_when_username", it) }
+            ?: Messages.get("statusbar_signout_confirm_no_username")
 
         val confirmed = UiMessages.showYesNoDialog(
             e.project,

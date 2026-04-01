@@ -40,7 +40,7 @@ object Messages {
      * (i.e. its locale has an empty language tag).
      */
     fun locale(): Locale {
-        val l = BUNDLE.locale
-        return if (l.language.isEmpty()) Locale.getDefault() else l
+        val bundleLocale = BUNDLE.locale
+        return if (bundleLocale.language.isEmpty()) Locale.getDefault() else bundleLocale
     }
 }
