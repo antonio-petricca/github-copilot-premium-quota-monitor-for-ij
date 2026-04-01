@@ -135,11 +135,13 @@ class CopilotQuotaStatusBarWidget(
 
         try {
             busConnection = ApplicationManager.getApplication().messageBus.connect()
+
             busConnection?.subscribe(QuotaNotifier.QUOTA_TOPIC, object : QuotaListener {
                 override fun quotaUpdated(result: PluginService.QuotaResult) {
                     ApplicationManager.getApplication().invokeLater { updateLabel(result) }
                 }
             })
+
             busConnection?.subscribe(SettingsChangeNotifier.SETTINGS_TOPIC, SettingsChangeListener {
                 val newDelayMs = PluginSettings.getInstance().refreshIntervalMinutes * 60 * 1_000
                 SwingUtilities.invokeLater {
@@ -155,10 +157,13 @@ class CopilotQuotaStatusBarWidget(
 
     override fun dispose() {
         refreshTimer.stop()
+
         blinkTimer?.stop()
         blinkTimer = null
+
         singleClickTimer?.stop()
         singleClickTimer = null
+
         try { busConnection?.disconnect() } catch (_: Exception) {}
         busConnection = null
         statusBar     = null
@@ -174,6 +179,7 @@ class CopilotQuotaStatusBarWidget(
             is PluginService.QuotaResult.NoAccount -> Messages.get("statusbar_widget_signin")
             is PluginService.QuotaResult.Error     -> Messages.get("statusbar_widget_error")
         }
+
         label.toolTipText = when (result) {
             is PluginService.QuotaResult.Loading   -> Messages.get("statusbar_tooltip_loading")
             is PluginService.QuotaResult.Available -> {
@@ -245,10 +251,12 @@ class CopilotQuotaStatusBarWidget(
      */
     private fun blinkLabel() {
         blinkTimer?.stop()
+
         val fullColor = label.foreground
         @Suppress("UseJBColor")
         val dimColor  = Color(fullColor.red, fullColor.green, fullColor.blue, 128)
         var step = 0
+
         blinkTimer = Timer(400, null).also { t ->
             t.addActionListener {
                 step++
@@ -328,6 +336,7 @@ class CopilotQuotaPopupGroup(
             SignOutAction()
         else
             SignInAction(project)
+
         return arrayOf(OpenSettingsAction(project), RefreshAction(onRefresh), Separator.getInstance(), signAction)
     }
 }
@@ -396,6 +405,7 @@ class SignOutAction : AnAction(
 
         if (confirmed) {
             auth.clearAuthentication()
+
             UiMessages.showInfoMessage(
                 e.project,
                 Messages.get("statusbar_signout_complete"),

@@ -186,6 +186,7 @@ class PluginService {
         val limit     = interactions["limit"]?.asInt ?: interactions["monthly_maximum"]?.asInt ?: return null
         val used      = interactions["used"]?.asInt ?: 0
         val remaining = (interactions["remaining"]?.asInt ?: (limit - used)).coerceAtLeast(0)
+
         return QuotaResult.Available(QuotaInfo(remaining, limit, quotaReset))
     }
 
@@ -201,6 +202,7 @@ class PluginService {
             ?: quotaObj["limit"]?.asInt ?: return null
         val used      = quotaObj["used"]?.asInt ?: 0
         val remaining = (quotaObj["remaining"]?.asInt ?: (total - used)).coerceAtLeast(0)
+
         return QuotaResult.Available(QuotaInfo(remaining, total, quotaReset))
     }
 
@@ -211,6 +213,7 @@ class PluginService {
             ?: root["premium_requests_monthly_limit"]?.asInt ?: return null
         val used      = root["premium_requests_used"]?.asInt ?: 0
         val remaining = (max - used).coerceAtLeast(0)
+
         return QuotaResult.Available(QuotaInfo(remaining, max, quotaReset))
     }
 }
