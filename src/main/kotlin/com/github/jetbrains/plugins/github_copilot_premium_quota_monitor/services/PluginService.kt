@@ -49,6 +49,7 @@ class PluginService {
         val percentRemaining: Double,
         val renewalDate: String? = null,
         val quotaRemaining: Double? = null,
+        val quotaTotal: Double? = null,
     ) {
         constructor(used: Int, remaining: Int, total: Int, renewalDate: String? = null) : this(
             if (total > 0) {
@@ -56,7 +57,8 @@ class PluginService {
                 if (pct <= 0.0) 0.0 else pct
             } else 0.0,
             renewalDate,
-            if (remaining <= 0) 0.0 else remaining.toDouble()
+            if (remaining <= 0) 0.0 else remaining.toDouble(),
+            total.toDouble()
         )
     }
 
@@ -151,11 +153,13 @@ class PluginService {
                     val unlimited = premium["unlimited"]?.asBoolean ?: false
                     val quotaRemRaw = premium["quota_remaining"]?.asDouble
                     val quotaRem = if (quotaRemRaw != null && quotaRemRaw > 0.0) quotaRemRaw else 0.0
+                    val quotaTotalRaw = premium["entitlement"]?.asDouble
+                        ?: premium["quota_total"]?.asDouble
                     if (pctRaw != null) {
                         return if (unlimited)
                             QuotaResult.Unlimited
                         else
-                            QuotaResult.Available(QuotaInfo(pct, quotaReset, quotaRem))
+                            QuotaResult.Available(QuotaInfo(pct, quotaReset, quotaRem, quotaTotalRaw))
                     }
                 }
 
