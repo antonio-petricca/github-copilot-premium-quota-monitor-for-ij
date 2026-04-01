@@ -66,6 +66,7 @@ class CopilotQuotaStatusBarWidget(
 
     private var statusBar: StatusBar? = null
     private var busConnection: MessageBusConnection? = null
+    private var blinkTimer: Timer? = null
 
     private val label: JLabel = JLabel(Messages.get("statusbar_widget_initial")).apply {
         icon        = CopilotIcons.Logo
@@ -127,6 +128,8 @@ class CopilotQuotaStatusBarWidget(
 
     override fun dispose() {
         refreshTimer.stop()
+        blinkTimer?.stop()
+        blinkTimer = null
         try { busConnection?.disconnect() } catch (_: Exception) {}
         busConnection = null
         statusBar     = null
@@ -193,7 +196,43 @@ class CopilotQuotaStatusBarWidget(
     }
 
     fun refresh() {
-        PluginService.getInstance().refreshQuota { updateLabel(it) }
+        PluginService.getInstance().refreshQuota { result ->
+            updateLabel(result)
+            blinkLabel()
+        }
+    }
+
+    /**
+     * Makes the widget label blink twice after a quota refresh.
+     * Alternates the label foreground between its current color and
+     * the same color at 50 % opacity (alpha = 128).
+     * Each half-cycle lasts 400 ms → full animation ~1 200 ms.
+     *
+     * Timeline:
+     *   t =    0 ms  dim  (1st blink)
+     *   t =  400 ms  full (1st blink end)
+     *   t =  800 ms  dim  (2nd blink)
+     *   t = 1 200 ms full (2nd blink end) → stop
+     */
+    private fun blinkLabel() {
+        blinkTimer?.stop()
+        val fullColor = label.foreground
+        @Suppress("UseJBColor")
+        val dimColor  = Color(fullColor.red, fullColor.green, fullColor.blue, 128)
+        var step = 0
+        blinkTimer = Timer(400, null).also { t ->
+            t.addActionListener {
+                step++
+                label.foreground = if (step % 2 == 1) fullColor else dimColor
+                if (step >= 3) {
+                    label.foreground = fullColor
+                    t.stop()
+                }
+            }
+            t.isRepeats = true
+            label.foreground = dimColor   // 1st blink: start dim
+            t.start()
+        }
     }
 
     // Format an ISO-8601 timestamp string into the current locale date/time format.
