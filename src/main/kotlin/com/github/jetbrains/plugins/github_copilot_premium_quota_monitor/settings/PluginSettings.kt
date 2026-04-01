@@ -13,8 +13,8 @@ import com.intellij.openapi.components.Storage
  */
 @Service(Service.Level.APP)
 @State(
-    name = "GithubCopilotQuotaMonitorSettings",
-    storages = [Storage("ghcp-quota-monitor-settings.xml")]
+    name = "GithubCopilotPremiumQuotaMonitorSettings",
+    storages = [Storage("ghcp-premium-quota-monitor-settings.xml")]
 )
 class PluginSettings : PersistentStateComponent<PluginSettings.State> {
 
