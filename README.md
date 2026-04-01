@@ -40,8 +40,9 @@ works with IntelliJ IDEA Community and other JetBrains IDEs.
 ## Features
 
 - Status bar widget that shows remaining premium quota as a percentage (for example: `⊙ 50%`).
-- Automatic background refresh (default: every 5 minutes).
-- Manual refresh via click or context menu.
+- Automatic background refresh (default: every 5 minutes) can be customized by the IDE settings dialog.
+- **Double-click** on the widget for an immediate quota refresh without opening any menu.
+- Manual refresh via the quick-action popup menu (single left-click).
 - Tooltip with detailed quota information and quick actions.
 - OAuth Device Flow authentication (no redirect URI required).
 - Secure token storage using IntelliJ PasswordSafe (OS keychain / KDE Wallet / encrypted file).
@@ -103,11 +104,11 @@ This plugin uses GitHub's OAuth Device Flow (RFC 8628).
 
 Steps:
 
-1. If not authenticated, right-click the status bar widget and choose **Sign in with GitHub**, or open the IDE after installing the plugin — the sign-in dialog will appear automatically.
+1. If not authenticated, left-click the status bar widget and choose **Sign in with GitHub**, or open the IDE after installing the plugin — the sign-in dialog will appear automatically.
 2. The dialog shows a one-time device code and a link to GitHub's device authorization page.
 3. Enter the code on GitHub to authorize the plugin. The plugin polls GitHub until authorization is complete and stores the access token securely in PasswordSafe.
 
-To sign out: right-click the widget → **Sign out**.
+To sign out: left-click the widget → **Sign out**.
 
 ---
 
@@ -115,7 +116,7 @@ To sign out: right-click the widget → **Sign out**.
 
 - The widget appears in the IDE status bar showing remaining quota as a percentage (e.g. `⊙ 50%`).
 - Hover to see the tooltip with remaining requests and renewal date.
-- Click or right-click the widget for quick actions: `Refresh`, `Sign in with GitHub`, `Sign out`.
+- Left-click the widget for quick actions: `Refresh`, `Sign in with GitHub`, `Sign out`.
 
 ---
 
@@ -151,7 +152,8 @@ The widget updates its label and tooltip according to the current authentication
   - Use the tooltip and the IDE log (Help → Show Log in Explorer / Finder) to inspect error details.
 
 Interactions
-- Left-click the widget to open the quick-action popup (Refresh plus Sign in / Sign out depending on auth state). The popup actions are implemented so a manual `Refresh` triggers an immediate quota fetch.
+- **Left single-click** the widget to open the quick-action popup (Refresh plus Sign in / Sign out depending on auth state). The refresh is performed only if you select "Refresh" from the popup; a simple left-click does not refresh the quota.
+- **Left double-click** the widget to trigger an immediate quota refresh directly, without opening any menu.
 - To sign in: choose `Sign in with GitHub` from the popup (or the sign-in dialog is shown automatically on first run when not authenticated).
 - To sign out: choose `Sign Out` from the popup; a confirmation dialog is shown and stored credentials are cleared on confirmation.
 - To enable/disable the widget in the IDE, use the status bar context menu: right-click the IDE status bar → choose `GitHub Copilot Premium Quota Monitor` to toggle visibility.
@@ -197,7 +199,20 @@ Use `./gradlew runIde` to start an isolated instance of the target IDE where you
 
 ## Localization
 
-This plugin ships with a resource bundle (`messages.properties`) and includes an Italian translation (`messages_it.properties`) under `src/main/resources`.
+This plugin ships with a resource bundle (`messages.properties`) and includes translations for:
+
+- Albanian (`messages_sq.properties`)
+- Chinese (`messages_zh.properties`)
+- English (default)
+- French (`messages_fr.properties`)
+- German (`messages_de.properties`)
+- Italian (`messages_it.properties`)
+- Japanese (`messages_ja.properties`)
+- Portuguese (`messages_pt.properties`)
+- Russian (`messages_ru.properties`)
+- Spanish (`messages_es.properties`)
+- Turkish (`messages_tr.properties`)
+
 To add or update translations, add `messages_xx.properties` files and provide translations for the existing keys.
 
 ---

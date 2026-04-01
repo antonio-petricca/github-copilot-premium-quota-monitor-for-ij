@@ -6,7 +6,7 @@ plugins {
     id("org.jetbrains.intellij.platform")
 }
 
-// Blocco pluginVerification rimosso temporaneamente per evitare errori di compilazione
+// pluginVerification block temporarily disabled to avoid compilation errors
 
 // ── Properties from gradle.properties ────────────────────────────────────────
 val pluginGroup: String by project
@@ -43,7 +43,7 @@ intellijPlatform {
             sinceBuild = pluginSinceBuild
             // untilBuild is intentionally left unset to allow all future builds
         }
-        // name, description e changeNotes sono ora gestiti in plugin.xml
+        // name, description and changeNotes are managed in plugin.xml
     }
 }
 
