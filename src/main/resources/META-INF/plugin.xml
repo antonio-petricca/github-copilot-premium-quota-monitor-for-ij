@@ -81,11 +81,15 @@
         <applicationService
             serviceImplementation="com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettings"/>
 
-        <!-- Settings panel under Settings → Tools -->
+        <!-- Settings panel under Settings → Tools.
+             'key' + 'bundle' allow IntelliJ to resolve the display name from the
+             message bundle without loading (instantiating) the configurable class. -->
         <applicationConfigurable
             parentId="tools"
             instance="com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettingsConfigurable"
-            id="com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettingsConfigurable"/>
+            id="com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettingsConfigurable"
+            key="settings_title"
+            bundle="messages"/>
 
         <!-- Status bar widget factory -->
         <statusBarWidgetFactory
