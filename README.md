@@ -41,7 +41,8 @@ works with IntelliJ IDEA Community and other JetBrains IDEs.
 
 - Status bar widget that shows remaining premium quota as a percentage (for example: `⊙ 50%`).
 - Automatic background refresh (default: every 5 minutes) can be customized by the IDE settings dialog.
-- Manual refresh via click or context menu.
+- **Double-click** on the widget for an immediate quota refresh without opening any menu.
+- Manual refresh via the quick-action popup menu (single left-click).
 - Tooltip with detailed quota information and quick actions.
 - OAuth Device Flow authentication (no redirect URI required).
 - Secure token storage using IntelliJ PasswordSafe (OS keychain / KDE Wallet / encrypted file).
@@ -151,7 +152,8 @@ The widget updates its label and tooltip according to the current authentication
   - Use the tooltip and the IDE log (Help → Show Log in Explorer / Finder) to inspect error details.
 
 Interactions
-- Left-click the widget to open the quick-action popup (Refresh plus Sign in / Sign out depending on auth state). The refresh is performed only if you select "Refresh" from the popup; a simple left-click does not refresh the quota.
+- **Left single-click** the widget to open the quick-action popup (Refresh plus Sign in / Sign out depending on auth state). The refresh is performed only if you select "Refresh" from the popup; a simple left-click does not refresh the quota.
+- **Left double-click** the widget to trigger an immediate quota refresh directly, without opening any menu.
 - To sign in: choose `Sign in with GitHub` from the popup (or the sign-in dialog is shown automatically on first run when not authenticated).
 - To sign out: choose `Sign Out` from the popup; a confirmation dialog is shown and stored credentials are cleared on confirmation.
 - To enable/disable the widget in the IDE, use the status bar context menu: right-click the IDE status bar → choose `GitHub Copilot Premium Quota Monitor` to toggle visibility.

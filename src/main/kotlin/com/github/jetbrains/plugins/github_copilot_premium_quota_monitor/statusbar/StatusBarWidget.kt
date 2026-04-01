@@ -49,8 +49,9 @@ import java.time.format.FormatStyle
  * to the [JLabel] receives **all** mouse events (including right-click) directly,
  * without the IntelliJ status bar framework intercepting them.
  *
- * - Left-click  → context menu (Refresh / Sign in or Sign out).
- * - Auto-refresh every 5 minutes.
+ * - Left single-click  → context menu (Refresh / Sign in or Sign out).
+ * - Left double-click  → immediate quota refresh (no menu).
+ * - Auto-refresh at a configurable interval (default: 5 minutes).
  */
 class CopilotQuotaStatusBarWidget(
     private val project: Project,
@@ -72,7 +73,9 @@ class CopilotQuotaStatusBarWidget(
         border      = JBUI.Borders.empty(0, 4)
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (SwingUtilities.isLeftMouseButton(e)) showPopupMenu()
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    if (e.clickCount == 2) refresh() else showPopupMenu()
+                }
             }
         })
     }
