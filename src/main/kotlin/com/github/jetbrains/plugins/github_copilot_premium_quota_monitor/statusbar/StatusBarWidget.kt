@@ -8,6 +8,7 @@ import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.service
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.QuotaListener
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.QuotaNotifier
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettings
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettingsConfigurable
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.SettingsChangeListener
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.SettingsChangeNotifier
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.ui.DeviceAuthFlowDialog
@@ -15,7 +16,9 @@ import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages as UiMessages
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -236,7 +239,12 @@ class CopilotQuotaStatusBarWidget(
 
 /**
  * Context menu shown on left-click.
- * Always shows Refresh; shows Sign in or Sign out based on authentication state.
+ *
+ * Order:
+ *   1. Settings…
+ *   2. Refresh
+ *   ─────────────
+ *   3. Sign in  /  Sign out
  */
 class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
 
@@ -246,7 +254,7 @@ class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
             SignOutAction()
         else
             SignInAction(project)
-        return arrayOf(RefreshAction(), signAction)
+        return arrayOf(OpenSettingsAction(project), RefreshAction(), Separator.getInstance(), signAction)
     }
 }
 
@@ -325,3 +333,15 @@ class SignOutAction : AnAction(
         }
     }
 }
+
+/** Opens the plugin settings panel (Settings → Tools → GitHub Copilot Premium Quota Monitor). */
+class OpenSettingsAction(private val project: Project) : AnAction(
+    Messages.get("statusbar_action_settings"),
+    null,
+    AllIcons.General.Settings,
+) {
+    override fun actionPerformed(e: AnActionEvent) {
+        ShowSettingsUtil.getInstance().showSettingsDialog(project, PluginSettingsConfigurable::class.java)
+    }
+}
+
