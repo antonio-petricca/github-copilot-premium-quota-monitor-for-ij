@@ -31,6 +31,7 @@ import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
 import java.awt.Color
 import java.awt.Point
+import java.awt.Toolkit
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.time.Instant
@@ -55,6 +56,9 @@ import javax.swing.Timer
  * - Left single-click  → context menu (Refresh / Sign in or Sign out).
  * - Left double-click  → immediate quota refresh (no menu).
  * - Auto-refresh at a configurable interval (default: 5 minutes).
+ *
+ * Single-click uses a short timer (system multi-click interval) to avoid
+ * opening the popup on the first click of a double-click sequence.
  */
 class CopilotQuotaStatusBarWidget(
     private val project: Project,
@@ -68,6 +72,12 @@ class CopilotQuotaStatusBarWidget(
     private var busConnection: MessageBusConnection? = null
     private var blinkTimer: Timer? = null
 
+    /**
+     * Pending timer for a deferred single-click action (show popup).
+     * Cancelled immediately if a second click arrives (double-click → refresh).
+     */
+    private var singleClickTimer: Timer? = null
+
     private val label: JLabel = JLabel(Messages.get("statusbar_widget_initial")).apply {
         icon        = CopilotIcons.Logo
         iconTextGap = 4
@@ -77,8 +87,25 @@ class CopilotQuotaStatusBarWidget(
         border      = JBUI.Borders.empty(0, 4)
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (SwingUtilities.isLeftMouseButton(e)) {
-                    if (e.clickCount == 2) refresh() else showPopupMenu()
+                if (!SwingUtilities.isLeftMouseButton(e)) return
+                when {
+                    e.clickCount >= 2 -> {
+                        // Double-click: cancel any pending single-click and refresh immediately.
+                        singleClickTimer?.stop()
+                        singleClickTimer = null
+                        refresh()
+                    }
+                    e.clickCount == 1 -> {
+                        // Single-click: defer popup until the double-click timeout elapses,
+                        // so that the first click of a double-click does NOT open the popup.
+                        val delay = (Toolkit.getDefaultToolkit()
+                            .getDesktopProperty("awt.multiClickInterval") as? Int) ?: 300
+                        singleClickTimer?.stop()
+                        singleClickTimer = Timer(delay) { showPopupMenu() }.also {
+                            it.isRepeats = false
+                            it.start()
+                        }
+                    }
                 }
             }
         })
@@ -130,6 +157,8 @@ class CopilotQuotaStatusBarWidget(
         refreshTimer.stop()
         blinkTimer?.stop()
         blinkTimer = null
+        singleClickTimer?.stop()
+        singleClickTimer = null
         try { busConnection?.disconnect() } catch (_: Exception) {}
         busConnection = null
         statusBar     = null
@@ -187,7 +216,7 @@ class CopilotQuotaStatusBarWidget(
         val dataContext = DataManager.getInstance().getDataContext(label)
         val popup = JBPopupFactory.getInstance().createActionGroupPopup(
             null,
-            CopilotQuotaPopupGroup(project),
+            CopilotQuotaPopupGroup(project, ::refresh),
             dataContext,
             JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
             false,
@@ -283,8 +312,15 @@ class CopilotQuotaStatusBarWidget(
  *   2. Refresh
  *   ─────────────
  *   3. Sign in  /  Sign out
+ *
+ * [onRefresh] is invoked when the user selects "Refresh"; defaults to a plain
+ * [PluginService.refreshQuota] call but callers may supply the widget's own
+ * [CopilotQuotaStatusBarWidget.refresh] to also trigger the blink animation.
  */
-class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
+class CopilotQuotaPopupGroup(
+    private val project: Project,
+    private val onRefresh: () -> Unit = { PluginService.getInstance().refreshQuota() },
+) : ActionGroup() {
 
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
         // Use the cached (non-blocking) check — this may run under a read lock.
@@ -292,18 +328,20 @@ class CopilotQuotaPopupGroup(private val project: Project) : ActionGroup() {
             SignOutAction()
         else
             SignInAction(project)
-        return arrayOf(OpenSettingsAction(project), RefreshAction(), Separator.getInstance(), signAction)
+        return arrayOf(OpenSettingsAction(project), RefreshAction(onRefresh), Separator.getInstance(), signAction)
     }
 }
 
 /** Triggers an immediate quota refresh. */
-class RefreshAction : AnAction(
+class RefreshAction(
+    private val onRefresh: () -> Unit = { PluginService.getInstance().refreshQuota() },
+) : AnAction(
     Messages.get("statusbar_action_refresh"),
     null,
     AllIcons.Actions.Refresh,
 ) {
     override fun actionPerformed(e: AnActionEvent) {
-        PluginService.getInstance().refreshQuota()
+        onRefresh()
     }
 }
 

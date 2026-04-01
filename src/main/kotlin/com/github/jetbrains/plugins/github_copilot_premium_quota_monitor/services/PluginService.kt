@@ -86,22 +86,29 @@ class PluginService {
     fun refreshQuota(onComplete: (QuotaResult) -> Unit = {}) {
         if (!isFetching.compareAndSet(false, true)) return
 
-        ApplicationManager.getApplication().executeOnPooledThread {
-            try {
-                val result = fetchQuota()
-                cachedResultRef.set(result)
-                lastFetchTime.set(System.currentTimeMillis())
-
+        try {
+            ApplicationManager.getApplication().executeOnPooledThread {
                 try {
-                    ApplicationManager.getApplication().messageBus
-                        .syncPublisher(QuotaNotifier.QUOTA_TOPIC)
-                        .quotaUpdated(result)
-                } catch (_: Exception) { /* best-effort */ }
+                    val result = fetchQuota()
+                    cachedResultRef.set(result)
+                    lastFetchTime.set(System.currentTimeMillis())
 
-                ApplicationManager.getApplication().invokeLater { onComplete(result) }
-            } finally {
-                isFetching.set(false)
+                    try {
+                        ApplicationManager.getApplication().messageBus
+                            .syncPublisher(QuotaNotifier.QUOTA_TOPIC)
+                            .quotaUpdated(result)
+                    } catch (_: Exception) { /* best-effort */ }
+
+                    ApplicationManager.getApplication().invokeLater { onComplete(result) }
+                } finally {
+                    isFetching.set(false)
+                }
             }
+        } catch (e: Exception) {
+            // executeOnPooledThread itself threw (e.g. RejectedExecutionException during shutdown).
+            // Reset the flag so future calls are not permanently blocked.
+            isFetching.set(false)
+            LOG.warn("Failed to schedule quota refresh", e)
         }
     }
 

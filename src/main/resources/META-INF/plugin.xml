@@ -53,6 +53,7 @@
                     <li>Automatic background refresh (default 5 minutes) now can be customized by IDE settings dialog.</li>
                     <li>Double-click on the status bar widget now triggers an immediate quota refresh without opening any menu.</li>
                     <li>Enhanced usage details in tooltip: interactions now display "X of Y calls" when total quota is available, otherwise "X calls".</li>
+                    <li>Fixed forced/manual refresh not invoked.</li>
                     <li>Improved UI consistency: standard IDE icons for popup "Sign in" / "Sign out", and aligned "Open in Browser" button height with "Copy Code".</li>
                     <li>Improved widget UX clarity: left single-click opens the quick-action popup; double-click refreshes immediately.</li>
                     <li>Localization updates and quality improvements for: Albanian (sq), Chinese (zh), French (fr), German (de), Italian (it), Japanese (ja), Portuguese (pt), Russian (ru), Spanish (es), and Turkish (tr).</li>
