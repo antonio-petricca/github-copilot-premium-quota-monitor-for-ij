@@ -47,18 +47,14 @@
                 <strong>Version 1.0.3</strong>
                 <br/>
                 <ul>
-                    <li>Clarified in description, README, and messages that left-click opens the quick actions menu; refresh must be selected from the menu.</li>
-                    <li>Consistency: sign-in dialog header and status bar labels now use "GitHub CoPilot" in all languages.</li>
-                    <li>Contributors added to the plugin description: Fabio Pelliccia, Massimo Ambrosino, and Vincenzo Pimpinella.</li>
-                    <li>"Interactions" value in the status bar tooltip is now rounded to the nearest integer.</li>
-                    <li>"Open in Browser" button now matches "Copy Code" button height.</li>
-                    <li>Popup "Sign in" and "Sign out" icons replaced with standard IDE icons.</li>
-                    <li>Source code cleanup and formatting improvements.</li>
-                    <li>Status bar tooltip: interactions now show "X of Y calls" when the total quota is available, otherwise "X calls".</li>
-                    <li>Status bar tooltip: label changed from "Quota:" to "Remaining quota:" (and equivalent in all languages).</li>
-                    <li>Status bar tooltip: renewal date is now formatted according to the active UI locale.</li>
-                    <li>Status bar tooltip widened for improved readability.</li>
-                    <li>Translations added/updated/improved: Albanian (sq), Chinese (zh), French (fr), German (de), Italian (it), Japanese (ja), Portuguese (pt), Russian (ru), Spanish (es) and Turkish (tr).</li>
+                    <li>Added contributor credits in plugin description (Fabio Pelliccia, Massimo Ambrosino, Vincenzo Pimpinella) and performed general source cleanup/formatting improvements.</li>
+                    <li>Enhanced usage details in tooltip: interactions now display "X of Y calls" when total quota is available, otherwise "X calls".</li>
+                    <li>Improved UI consistency: standard IDE icons for popup "Sign in" / "Sign out", and aligned "Open in Browser" button height with "Copy Code".</li>
+                    <li>Improved widget UX clarity: left-click behavior is now clearly documented across description, README, and in-plugin messages (opens quick actions; refresh is a menu action).</li>
+                    <li>Localization updates and quality improvements for: Albanian (sq), Chinese (zh), French (fr), German (de), Italian (it), Japanese (ja), Portuguese (pt), Russian (ru), Spanish (es), and Turkish (tr).</li>
+                    <li>Refined status bar tooltip readability and consistency: wider layout, rounded interactions value, and renamed label from "Quota" to "Remaining quota" (localized).</li>
+                    <li>Renewal date in tooltip is now formatted according to the active UI locale.</li>
+                    <li>Terminology unified to "GitHub CoPilot" in sign-in dialog header and status bar labels across all languages.</li>
                 </ul>
             </p>
             <p>
