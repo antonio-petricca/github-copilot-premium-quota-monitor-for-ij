@@ -226,7 +226,6 @@ class AuthService {
             connectTimeout = 10_000
             readTimeout    = 10_000
         }
-
         if (conn.responseCode == HttpURLConnection.HTTP_OK)
             JsonParser.parseString(conn.inputStream.bufferedReader().readText())
                 .asJsonObject["login"]?.asString
@@ -246,7 +245,6 @@ class AuthService {
             connectTimeout = 10_000
             readTimeout    = 10_000
         }
-
         OutputStreamWriter(conn.outputStream).use { it.write(body) }
         return conn
     }

@@ -73,7 +73,6 @@ class DeviceAuthFlowDialog(
         setOKButtonText(Messages.get("deviceauth_button_ok"))
         init() // builds the UI
         window?.isAlwaysOnTop = false
-
         startPolling()
         countdownTimer.start()
     }
@@ -224,7 +223,6 @@ class DeviceAuthFlowDialog(
         CopyPasteManager.getInstance().setContents(StringSelection(response.userCode))
         button.text = Messages.get("deviceauth_copy_done")
         button.icon = AllIcons.Actions.Commit
-
         Timer(COPY_FEEDBACK_DELAY_MS) {
             button.text = Messages.get("deviceauth_copy")
             button.icon = AllIcons.Actions.Copy
@@ -238,7 +236,6 @@ class DeviceAuthFlowDialog(
     private fun startPolling() {
         val intervalMs = response.interval.coerceAtLeast(5) * 1_000L
         val expiresAt  = System.currentTimeMillis() + response.expiresIn * 1_000L
-
         pollingThread = Thread {
             while (!Thread.interrupted() && System.currentTimeMillis() < expiresAt) {
                 try {
@@ -246,7 +243,6 @@ class DeviceAuthFlowDialog(
                 } catch (_: InterruptedException) {
                     return@Thread
                 }
-
                 try {
                     when (val r = authService.pollForToken(response.deviceCode)) {
                         is AuthService.PollResult.Success -> {
@@ -284,13 +280,11 @@ class DeviceAuthFlowDialog(
     private fun updateStatus(text: String, error: Boolean) {
         ApplicationManager.getApplication().invokeLater {
             countdownTimer.stop()
-
             statusLabel?.apply {
-                this.text       = text
-                this.icon       = if (error) AllIcons.General.Error else AllIcons.Process.ProgressResume
+                this.text      = text
+                this.icon      = if (error) AllIcons.General.Error else AllIcons.Process.ProgressResume
                 this.foreground = if (error) JBColor.RED else UIUtil.getContextHelpForeground()
             }
-
             countdownLabel?.text = ""
         }
     }
