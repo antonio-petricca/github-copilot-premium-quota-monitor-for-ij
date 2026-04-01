@@ -234,6 +234,8 @@ class DeviceAuthFlowDialog(
 
     // Polling
     private fun startPolling() {
+        LOG.info("Starting GitHub OAuth device code polling")
+
         val intervalMs = response.interval.coerceAtLeast(5) * 1_000L
         val expiresAt  = System.currentTimeMillis() + response.expiresIn * 1_000L
         pollingThread = Thread {
@@ -241,11 +243,15 @@ class DeviceAuthFlowDialog(
                 try {
                     Thread.sleep(intervalMs)
                 } catch (_: InterruptedException) {
+                    LOG.debug("Polling thread interrupted")
+
                     return@Thread
                 }
                 try {
                     when (val r = authService.pollForToken(response.deviceCode)) {
                         is AuthService.PollResult.Success -> {
+                            LOG.info("Device code polling succeeded, saving token")
+
                             authService.saveAuthentication(r.token)
                             authenticated = true
                             ApplicationManager.getApplication().invokeLater {
@@ -254,12 +260,20 @@ class DeviceAuthFlowDialog(
                             }
                             return@Thread
                         }
-                        is AuthService.PollResult.Pending -> { /* keep polling */ }
+                        is AuthService.PollResult.Pending -> {
+                            LOG.debug("Device flow still pending, continuing polling")
+
+                            /* keep polling */
+                        }
                         is AuthService.PollResult.Expired -> {
+                            LOG.warn("Device code expired during polling")
+
                             updateStatus(Messages.get("deviceauth_code_expired"), error = true)
                             return@Thread
                         }
                         is AuthService.PollResult.Error -> {
+                            LOG.error("Device code polling error: ${r.message}")
+
                             updateStatus(Messages.format("deviceauth_error_with_message", r.message), error = true)
                             return@Thread
                         }
@@ -270,6 +284,8 @@ class DeviceAuthFlowDialog(
                     return@Thread
                 }
             }
+            LOG.warn("Device code polling timeout - code expired")
+
             updateStatus(Messages.get("deviceauth_code_expired"), error = true)
         }.apply {
             isDaemon = true
@@ -280,23 +296,29 @@ class DeviceAuthFlowDialog(
     private fun updateStatus(text: String, error: Boolean) {
         ApplicationManager.getApplication().invokeLater {
             countdownTimer.stop()
+
             statusLabel?.apply {
                 this.text      = text
                 this.icon      = if (error) AllIcons.General.Error else AllIcons.Process.ProgressResume
                 this.foreground = if (error) JBColor.RED else UIUtil.getContextHelpForeground()
             }
+
             countdownLabel?.text = ""
         }
     }
 
     // Actions
     override fun doCancelAction() {
+        LOG.info("Device auth dialog cancelled by user")
+
         pollingThread?.interrupt()
         countdownTimer.stop()
         super.doCancelAction()
     }
 
     private fun openBrowser() {
+        LOG.debug("Opening GitHub device auth URL in browser")
+
         try {
             if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(URI(response.verificationUri))
         } catch (e: Exception) {

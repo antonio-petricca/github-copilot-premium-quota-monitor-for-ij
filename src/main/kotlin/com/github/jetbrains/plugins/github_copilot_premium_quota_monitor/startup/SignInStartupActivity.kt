@@ -23,9 +23,13 @@ class SignInStartupActivity : ProjectActivity {
 
     override suspend fun execute(project: Project) {
         if (!AuthService.getInstance().isAuthenticated()) {
+            LOG.info("No authentication found, showing sign-in dialog on startup")
+
             ApplicationManager.getApplication().invokeLater {
                 startSignInFlow(project)
             }
+        } else {
+            LOG.debug("User is already authenticated")
         }
     }
 

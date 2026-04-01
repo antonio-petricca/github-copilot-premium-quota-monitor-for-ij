@@ -130,12 +130,14 @@ class AuthService {
      * Must be called off the EDT.
      */
     fun saveAuthentication(token: String) {
-        LOG.info("Saving OAuth token")
+        LOG.info("Saving OAuth token and fetching GitHub username")
+
         cachedToken.set(token) // update in-memory cache before persisting
         PasswordSafe.instance.setPassword(TOKEN_ATTRS, token)
 
         val username = fetchUsername(token)
-        LOG.info("Fetched username=$username")
+        LOG.info("GitHub username fetched: $username")
+
         cachedUsername.set(username)
         PasswordSafe.instance.setPassword(USERNAME_ATTRS, username)
 
@@ -144,6 +146,8 @@ class AuthService {
 
     /** Removes the stored token and username from both the cache and PasswordSafe. */
     fun clearAuthentication() {
+        LOG.info("Clearing stored authentication credentials")
+
         cachedToken.set(null)
         cachedUsername.set(null)
 
@@ -169,9 +173,13 @@ class AuthService {
      */
     @Throws(Exception::class)
     fun requestDeviceCode(): DeviceCodeResponse {
+        LOG.info("Requesting device code from GitHub")
+
         val conn = post(DEVICE_CODE_URL, "client_id=${enc(CLIENT_ID)}&scope=${enc(SCOPE)}")
         val code = conn.responseCode
         if (code != HttpURLConnection.HTTP_OK) {
+            LOG.error("Device code request failed with HTTP $code")
+
             throw RuntimeException(Messages.format("auth_device_code_http_error", code))
         }
 
@@ -182,7 +190,9 @@ class AuthService {
             verificationUri = json["verification_uri"]?.asString ?: "https://github.com/login/device",
             interval        = json["interval"]?.asInt            ?: 5,
             expiresIn       = json["expires_in"]?.asInt          ?: 900,
-        )
+        ).also {
+            LOG.debug("Device code obtained, expires in ${it.expiresIn} seconds")
+        }
     }
 
     /**
@@ -192,22 +202,42 @@ class AuthService {
      */
     fun pollForToken(deviceCode: String): PollResult {
         return try {
+            LOG.debug("Polling GitHub for access token")
+
             val body = "client_id=${enc(CLIENT_ID)}" +
                        "&device_code=${enc(deviceCode)}" +
                        "&grant_type=${enc("urn:ietf:params:oauth:grant-type:device_code")}"
             val conn = post(ACCESS_TOKEN_URL, body)
             if (conn.responseCode != HttpURLConnection.HTTP_OK) {
+                LOG.debug("Poll returned HTTP ${conn.responseCode}")
+
                 return PollResult.Error(Messages.format("auth_poll_http_error", conn.responseCode))
             }
 
             val json  = JsonParser.parseString(conn.inputStream.bufferedReader().readText()).asJsonObject
             val token = json["access_token"]?.asString
-            if (!token.isNullOrBlank()) return PollResult.Success(token)
+            if (!token.isNullOrBlank()) {
+                LOG.info("Access token successfully obtained")
+
+                return PollResult.Success(token)
+            }
 
             when (json["error"]?.asString) {
-                "authorization_pending", "slow_down" -> PollResult.Pending
-                "expired_token"                       -> PollResult.Expired
-                else -> PollResult.Error(json["error_description"]?.asString ?: Messages.get("auth_unknown_error"))
+                "authorization_pending", "slow_down" -> {
+                    LOG.debug("Device flow still pending")
+
+                    PollResult.Pending
+                }
+                "expired_token" -> {
+                    LOG.warn("Device code expired")
+
+                    PollResult.Expired
+                }
+                else -> {
+                    LOG.warn("Device flow error: ${json["error"]?.asString}")
+
+                    PollResult.Error(json["error_description"]?.asString ?: Messages.get("auth_unknown_error"))
+                }
             }
         } catch (e: Exception) {
             LOG.warn("Device-flow poll error", e)

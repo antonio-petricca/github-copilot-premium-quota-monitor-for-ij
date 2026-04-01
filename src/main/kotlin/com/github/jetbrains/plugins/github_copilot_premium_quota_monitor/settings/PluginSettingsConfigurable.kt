@@ -2,6 +2,7 @@ package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settin
 
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
@@ -17,6 +18,10 @@ import javax.swing.SpinnerNumberModel
  * that the status-bar widget can update its refresh timer on the fly.
  */
 class PluginSettingsConfigurable : Configurable {
+
+    companion object {
+        private val LOG = Logger.getInstance(PluginSettingsConfigurable::class.java)
+    }
 
     private var spinner: JSpinner? = null
 
@@ -51,6 +56,9 @@ class PluginSettingsConfigurable : Configurable {
     override fun apply() {
         val settings = PluginSettings.getInstance()
         val newValue = (spinner?.value as? Int) ?: PluginSettings.DEFAULT_INTERVAL_MINUTES
+
+        LOG.info("Applying new refresh interval: $newValue minutes")
+
         settings.refreshIntervalMinutes = newValue
 
         // Broadcast to all subscribers (e.g. status-bar widget) so they can

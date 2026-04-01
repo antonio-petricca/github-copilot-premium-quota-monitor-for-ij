@@ -29,6 +29,7 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
+import com.intellij.openapi.diagnostic.Logger
 import java.awt.Color
 import java.awt.Point
 import java.awt.Toolkit
@@ -65,6 +66,8 @@ class CopilotQuotaStatusBarWidget(
 ) : StatusBarWidget, CustomStatusBarWidget {
 
     companion object {
+        private val LOG = Logger.getInstance(CopilotQuotaStatusBarWidget::class.java)
+
         const val WIDGET_ID = "GitHubCopilotQuotaWidget"
     }
 
@@ -129,17 +132,21 @@ class CopilotQuotaStatusBarWidget(
     override fun getComponent(): JComponent = label
 
     override fun install(statusBar: StatusBar) {
+        LOG.info("Installing Copilot Quota Status Bar Widget")
+
         this.statusBar = statusBar
         updateLabel(PluginService.getInstance().cachedResult)
         refresh()
 
         try {
             busConnection = ApplicationManager.getApplication().messageBus.connect()
+
             busConnection?.subscribe(QuotaNotifier.QUOTA_TOPIC, object : QuotaListener {
                 override fun quotaUpdated(result: PluginService.QuotaResult) {
                     ApplicationManager.getApplication().invokeLater { updateLabel(result) }
                 }
             })
+
             busConnection?.subscribe(SettingsChangeNotifier.SETTINGS_TOPIC, SettingsChangeListener {
                 val newDelayMs = PluginSettings.getInstance().refreshIntervalMinutes * 60 * 1_000
                 SwingUtilities.invokeLater {
@@ -154,11 +161,16 @@ class CopilotQuotaStatusBarWidget(
     }
 
     override fun dispose() {
+        LOG.info("Disposing Copilot Quota Status Bar Widget")
+
         refreshTimer.stop()
+
         blinkTimer?.stop()
         blinkTimer = null
+
         singleClickTimer?.stop()
         singleClickTimer = null
+
         try { busConnection?.disconnect() } catch (_: Exception) {}
         busConnection = null
         statusBar     = null
@@ -225,6 +237,8 @@ class CopilotQuotaStatusBarWidget(
     }
 
     fun refresh() {
+        LOG.debug("Manual quota refresh triggered")
+
         PluginService.getInstance().refreshQuota { result ->
             updateLabel(result)
             blinkLabel()
@@ -352,7 +366,13 @@ class SignInAction(private val project: Project) : AnAction(
     AllIcons.General.User,
 ) {
 
+    companion object {
+        private val LOG = Logger.getInstance(SignInAction::class.java)
+    }
+
     override fun actionPerformed(e: AnActionEvent) {
+        LOG.info("Starting GitHub OAuth Device Flow sign-in")
+
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
                 val deviceCode = AuthService.getInstance().requestDeviceCode()
@@ -381,7 +401,13 @@ class SignOutAction : AnAction(
     AllIcons.Actions.Exit,
 ) {
 
+    companion object {
+        private val LOG = Logger.getInstance(SignOutAction::class.java)
+    }
+
     override fun actionPerformed(e: AnActionEvent) {
+        LOG.info("Signing out user")
+
         val auth = AuthService.getInstance()
         val msg  = auth.getSavedUsername()
             ?.let { Messages.format("statusbar_signout_confirm_when_username", it) }
@@ -396,6 +422,7 @@ class SignOutAction : AnAction(
 
         if (confirmed) {
             auth.clearAuthentication()
+
             UiMessages.showInfoMessage(
                 e.project,
                 Messages.get("statusbar_signout_complete"),
