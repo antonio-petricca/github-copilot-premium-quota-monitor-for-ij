@@ -44,4 +44,5 @@ bin/
 
 ### Custom
 /.intellijPlatform/
+/.verifyPlugin.log
 /nul
