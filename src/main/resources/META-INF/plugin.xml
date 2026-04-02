@@ -52,7 +52,7 @@
                     <li>Added widget blinking on refresh to provide visual feedback of update action.</li>
                     <li>Automatic background refresh (default 5 minutes) now can be customized by IDE settings dialog.</li>
                     <li>Double-click on the status bar widget now triggers an immediate quota refresh without opening any menu.</li>
-                    <li>Enhanced usage details in tooltip: interactions now display "X of Y calls" when total quota is available, otherwise "X calls".</li>
+                    <li>Enhanced usage details in tooltip: interactions now display "X of Y" when total quota is available, otherwise "X calls".</li>
                     <li>Fixed forced/manual refresh not invoked.</li>
                     <li>Improved logging for better debugging and monitoring of plugin behavior.</li>
                     <li>Improved UI consistency: standard IDE icons for popup "Sign in" / "Sign out", and aligned "Open in Browser" button height with "Copy Code".</li>

@@ -10,3 +10,4 @@
 /httpRequests/
 # JetBrains IDEs' internal state files
 /copilotDiffState.xml
+/GrepConsole.xml
