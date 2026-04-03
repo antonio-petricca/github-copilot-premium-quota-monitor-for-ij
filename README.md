@@ -27,6 +27,7 @@ works with IntelliJ IDEA Community and other JetBrains IDEs.
 - Installation
 - Authentication (first-time setup)
 - Usage
+- Settings
 - Status bar states
 - Building from source
 - Run in sandbox
@@ -40,13 +41,15 @@ works with IntelliJ IDEA Community and other JetBrains IDEs.
 ## Features
 
 - Status bar widget that shows remaining premium quota as a percentage (for example: `⊙ 50%`).
-- Automatic background refresh (default: every 5 minutes) can be customized by the IDE settings dialog.
+- Automatic background refresh (default: every 5 minutes) can be customized in the Settings panel.
 - **Double-click** on the widget for an immediate quota refresh without opening any menu.
 - Manual refresh via the quick-action popup menu (single left-click).
 - Tooltip with detailed quota information and quick actions.
 - OAuth Device Flow authentication (no redirect URI required).
 - Secure token storage using IntelliJ PasswordSafe (OS keychain / KDE Wallet / encrypted file).
 - Visual states for loading, unlimited plans, unauthenticated and error conditions.
+- **Configurable alert thresholds and colors**: set your own *critical* (default 10%) and *warning* (default 30%) quota percentage thresholds with custom colors directly from **Settings → Tools → GitHub Copilot Premium Quota Monitor**. Each setting has a dedicated "Reset to default" button.
+- Inline cross-field validation in the Settings panel ensures that the critical threshold is always strictly less than the warning threshold.
 
 ---
 
@@ -120,6 +123,22 @@ To sign out: left-click the widget → **Sign out**.
 
 ---
 
+## Settings
+
+Open **Settings → Tools → GitHub Copilot Premium Quota Monitor** to configure:
+
+| Setting | Default | Description |
+|---|---|---|
+| Auto-refresh interval | 5 min | How often the quota is refreshed automatically (1–60 minutes). |
+| Critical threshold | 10 % | Quota percentage at or below which the status bar label turns the critical color. |
+| Critical color | Red `#D32F2F` | Color used when quota is at or below the critical threshold. |
+| Warning threshold | 30 % | Quota percentage at or below which the status bar label turns the warning color. |
+| Warning color | Yellow `#FFFF00` | Color used when quota is at or below the warning threshold (but above critical). |
+
+Each setting has a **Reset to default** button (↩ icon). The constraint `1 < critical < warning < 100` is enforced with real-time inline validation.
+
+---
+
 ## Status bar states
 
 The widget updates its label and tooltip according to the current authentication and quota retrieval state. The concrete text values are defined in the plugin resource bundle (see `src/main/resources/messages.properties`). Below are the runtime states and what they mean:
@@ -132,10 +151,10 @@ The widget updates its label and tooltip according to the current authentication
 - Available (quota retrieved)
   - Label: a percentage formatted with one decimal (resource key: `statusbar_widget_available`, e.g. `50.0%`).
   - Tooltip: HTML table with "Remaining" and "Renewal" fields (resource key: `statusbar_tooltip_html`). If a renewal timestamp is provided it is shown in the user's local timezone.
-  - Color coding: the percentage label is colored to indicate urgency:
-	- <= 10% — red
-	- <= 30% — orange
-	-  > 30% — default label color
+  - Color coding: the percentage label is colored based on configurable thresholds (set in **Settings → Tools → GitHub Copilot Premium Quota Monitor**):
+    - at or below **critical** threshold (default 10%) → critical color (default red `#D32F2F`)
+    - at or below **warning** threshold (default 30%) → warning color (default yellow `#FFFF00`)
+    - above warning threshold → default label color
 
 - Unlimited
   - Label: `GHCP premium quota monitor ∞` (resource key: `statusbar_widget_unlimited`).
