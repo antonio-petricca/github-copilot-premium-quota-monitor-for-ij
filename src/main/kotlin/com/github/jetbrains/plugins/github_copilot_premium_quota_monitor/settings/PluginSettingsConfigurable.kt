@@ -147,7 +147,10 @@ class PluginSettingsConfigurable : Configurable {
         // Enforce: 1 < critical < warning < 100 (safety net — inline validators should
         // have already blocked Apply via the UI, but we guard here too).
         if (critical <= 1 || warning >= 100 || critical >= warning) {
-            throw ConfigurationException(Messages.get("settings_threshold_validation_error"))
+            throw ConfigurationException(
+                Messages.get("settings_threshold_validation_error"),
+                Messages.get("settings_threshold_validation_title"),
+            )
         }
 
         val s = PluginSettings.getInstance()
