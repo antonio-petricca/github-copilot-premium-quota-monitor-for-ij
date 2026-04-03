@@ -25,7 +25,6 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.wm.CustomStatusBarWidget
 import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
-import com.intellij.ui.JBColor
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
@@ -150,11 +149,14 @@ class CopilotQuotaStatusBarWidget(
             })
 
             busConnection?.subscribe(SettingsChangeNotifier.SETTINGS_TOPIC, SettingsChangeListener {
-                val newDelayMs = PluginSettings.getInstance().refreshIntervalMinutes * 60 * 1_000
+                val settings   = PluginSettings.getInstance()
+                val newDelayMs = settings.refreshIntervalMinutes * 60 * 1_000
                 SwingUtilities.invokeLater {
                     refreshTimer.delay        = newDelayMs
                     refreshTimer.initialDelay = newDelayMs
                     refreshTimer.restart()
+                    // Re-apply colors/thresholds immediately without waiting for next quota poll.
+                    updateLabel(PluginService.getInstance().cachedResult)
                 }
             })
         } catch (_: Exception) { /* best-effort */ }
@@ -207,16 +209,17 @@ class CopilotQuotaStatusBarWidget(
             is PluginService.QuotaResult.Error     -> Messages.format("statusbar_tooltip_error", result.message)
         }
 
-        // Color the percentage label based on remaining quota:
-        // - red if <= 10%
-        // - orange if <= 20%
-        // Otherwise use the default label foreground.
+        // Color the percentage label based on remaining quota thresholds read from settings.
+        // Below criticalThreshold → critical color; below warningThreshold → warning color;
+        // otherwise use the default label foreground.
         when (result) {
             is PluginService.QuotaResult.Available -> {
-                val percent = result.quota.percentRemaining
+                val percent  = result.quota.percentRemaining
+                val settings = PluginSettings.getInstance()
+                @Suppress("UseJBColor")
                 label.foreground = when {
-                    percent <= 10.0 -> JBColor(Color(0xD32F2F), Color(0xFF5252)) // red (light/dark)
-                    percent <= 30.0 -> JBColor(Color(0xF57C00), Color(0xFFB74D)) // orange (light/dark)
+                    percent <= settings.criticalThreshold -> Color(settings.criticalColorRgb)
+                    percent <= settings.warningThreshold  -> Color(settings.warningColorRgb)
                     else -> defaultLabelForeground
                 }
             }

@@ -20,12 +20,28 @@ class PluginSettings : PersistentStateComponent<PluginSettings.State> {
 
     data class State(
         var refreshIntervalMinutes: Int = DEFAULT_INTERVAL_MINUTES,
+        var criticalThreshold: Int      = DEFAULT_CRITICAL_THRESHOLD,
+        var criticalColorRgb: Int       = DEFAULT_CRITICAL_COLOR_RGB,
+        var warningThreshold: Int       = DEFAULT_WARNING_THRESHOLD,
+        var warningColorRgb: Int        = DEFAULT_WARNING_COLOR_RGB,
     )
 
     companion object {
-        const val DEFAULT_INTERVAL_MINUTES = 5
-        const val MIN_INTERVAL_MINUTES     = 1
-        const val MAX_INTERVAL_MINUTES     = 60
+        const val DEFAULT_INTERVAL_MINUTES   = 5
+        const val MIN_INTERVAL_MINUTES       = 1
+        const val MAX_INTERVAL_MINUTES       = 60
+
+        /** Quota % below which the widget turns red. Must satisfy: 1 < critical < warning < 100. */
+        const val DEFAULT_CRITICAL_THRESHOLD = 10
+        /** Quota % below which the widget turns orange. Must satisfy: 1 < critical < warning < 100. */
+        const val DEFAULT_WARNING_THRESHOLD  = 30
+        /** Default red color for the critical state (24-bit RGB, light theme). */
+        const val DEFAULT_CRITICAL_COLOR_RGB = 0xD32F2F
+        /** Default orange color for the warning state (24-bit RGB, light theme). */
+        const val DEFAULT_WARNING_COLOR_RGB  = 0xF57C00
+
+        const val MIN_THRESHOLD = 2   // critical > 1
+        const val MAX_THRESHOLD = 99  // warning < 100
 
         @JvmStatic
         fun getInstance(): PluginSettings =
@@ -46,5 +62,25 @@ class PluginSettings : PersistentStateComponent<PluginSettings.State> {
         set(value) {
             myState.refreshIntervalMinutes = value.coerceIn(MIN_INTERVAL_MINUTES, MAX_INTERVAL_MINUTES)
         }
+
+    /** Quota percentage threshold below which the status bar label turns the critical (red) color. */
+    var criticalThreshold: Int
+        get() = myState.criticalThreshold
+        set(value) { myState.criticalThreshold = value.coerceIn(MIN_THRESHOLD, MAX_THRESHOLD) }
+
+    /** 24-bit RGB color used when quota is at or below [criticalThreshold]. */
+    var criticalColorRgb: Int
+        get() = myState.criticalColorRgb
+        set(value) { myState.criticalColorRgb = value and 0xFFFFFF }
+
+    /** Quota percentage threshold below which the status bar label turns the warning (orange) color. */
+    var warningThreshold: Int
+        get() = myState.warningThreshold
+        set(value) { myState.warningThreshold = value.coerceIn(MIN_THRESHOLD, MAX_THRESHOLD) }
+
+    /** 24-bit RGB color used when quota is at or below [warningThreshold] but above [criticalThreshold]. */
+    var warningColorRgb: Int
+        get() = myState.warningColorRgb
+        set(value) { myState.warningColorRgb = value and 0xFFFFFF }
 }
 
