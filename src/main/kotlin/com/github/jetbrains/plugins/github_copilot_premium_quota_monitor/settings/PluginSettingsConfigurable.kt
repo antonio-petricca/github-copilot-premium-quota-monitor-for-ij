@@ -1,6 +1,7 @@
 package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings
 
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.ConfigurationException
@@ -10,6 +11,7 @@ import com.intellij.ui.ColorPanel
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
 import java.awt.Color
+import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JSpinner
 import javax.swing.SpinnerNumberModel
@@ -49,6 +51,37 @@ class PluginSettingsConfigurable : Configurable {
      */
     private var dialogPanel: DialogPanel? = null
 
+    // ── Reset actions ─────────────────────────────────────────────────────────
+
+    private fun resetRefresh() {
+        refreshSpinner?.value = PluginSettings.DEFAULT_INTERVAL_MINUTES
+    }
+
+    private fun resetCritical() {
+        criticalSpinner?.value = PluginSettings.DEFAULT_CRITICAL_THRESHOLD
+        @Suppress("UseJBColor")
+        criticalColor?.selectedColor = Color(PluginSettings.DEFAULT_CRITICAL_COLOR_RGB)
+    }
+
+    private fun resetWarning() {
+        warningSpinner?.value = PluginSettings.DEFAULT_WARNING_THRESHOLD
+        @Suppress("UseJBColor")
+        warningColor?.selectedColor = Color(PluginSettings.DEFAULT_WARNING_COLOR_RGB)
+    }
+
+    /**
+     * Creates a small icon-only "Reset to default" button styled as a flat
+     * toolbar button (borderless, no fill) consistent with the JetBrains UI.
+     */
+    private fun resetButton(action: () -> Unit): JButton =
+        JButton(AllIcons.General.Reset).apply {
+            toolTipText         = Messages.get("settings_reset_to_default")
+            putClientProperty("JButton.buttonType", "toolbarButton")
+            isContentAreaFilled = false
+            isBorderPainted     = false
+            addActionListener   { action() }
+        }
+
     // ── Configurable ──────────────────────────────────────────────────────────
 
     override fun getDisplayName(): String = Messages.get("settings_title")
@@ -85,6 +118,7 @@ class PluginSettingsConfigurable : Configurable {
             row(Messages.get("settings_refresh_interval_label")) {
                 cell(refreshSpinner!!)
                 label(Messages.get("settings_refresh_interval_unit"))
+                cell(resetButton(::resetRefresh))
             }.rowComment(Messages.get("settings_refresh_interval_comment"))
 
             // ── Threshold section ─────────────────────────────────────────────
@@ -102,6 +136,7 @@ class PluginSettingsConfigurable : Configurable {
                     label(Messages.get("settings_threshold_percent_unit"))
                     label(Messages.get("settings_threshold_color_label")).align(AlignX.RIGHT)
                     cell(criticalColor!!)
+                    cell(resetButton(::resetCritical))
                 }.rowComment(Messages.get("settings_critical_threshold_comment"))
 
                 row(Messages.get("settings_warning_threshold_label")) {
@@ -116,6 +151,7 @@ class PluginSettingsConfigurable : Configurable {
                     label(Messages.get("settings_threshold_percent_unit"))
                     label(Messages.get("settings_threshold_color_label")).align(AlignX.RIGHT)
                     cell(warningColor!!)
+                    cell(resetButton(::resetWarning))
                 }.rowComment(Messages.get("settings_warning_threshold_comment"))
             }
         }
@@ -192,4 +228,3 @@ class PluginSettingsConfigurable : Configurable {
         dialogPanel     = null
     }
 }
-
