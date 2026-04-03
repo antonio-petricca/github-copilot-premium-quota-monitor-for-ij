@@ -134,8 +134,8 @@ The widget updates its label and tooltip according to the current authentication
   - Tooltip: HTML table with "Remaining" and "Renewal" fields (resource key: `statusbar_tooltip_html`). If a renewal timestamp is provided it is shown in the user's local timezone.
   - Color coding: the percentage label is colored to indicate urgency:
 	- <= 10% — red
-	- <= 20% — orange
-	- > 20% — default label color
+	- <= 30% — orange
+	-  > 30% — default label color
 
 - Unlimited
   - Label: `GHCP premium quota monitor ∞` (resource key: `statusbar_widget_unlimited`).

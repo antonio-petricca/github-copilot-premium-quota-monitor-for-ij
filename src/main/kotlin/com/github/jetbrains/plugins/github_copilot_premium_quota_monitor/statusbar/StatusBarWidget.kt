@@ -216,7 +216,7 @@ class CopilotQuotaStatusBarWidget(
                 val percent = result.quota.percentRemaining
                 label.foreground = when {
                     percent <= 10.0 -> JBColor(Color(0xD32F2F), Color(0xFF5252)) // red (light/dark)
-                    percent <= 20.0 -> JBColor(Color(0xF57C00), Color(0xFFB74D)) // orange (light/dark)
+                    percent <= 30.0 -> JBColor(Color(0xF57C00), Color(0xFFB74D)) // orange (light/dark)
                     else -> defaultLabelForeground
                 }
             }
