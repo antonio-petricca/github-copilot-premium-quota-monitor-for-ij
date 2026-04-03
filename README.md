@@ -131,7 +131,7 @@ Open **Settings → Tools → GitHub Copilot Premium Quota Monitor** to configur
 |---|---|---|
 | Auto-refresh interval | 5 min | How often the quota is refreshed automatically (1–60 minutes). |
 | Critical threshold | 10 % | Quota percentage at or below which the status bar label turns the critical color. |
-| Critical color | Red `#D32F2F` | Color used when quota is at or below the critical threshold. |
+| Critical color | Red `#FF0000` | Color used when quota is at or below the critical threshold. |
 | Warning threshold | 30 % | Quota percentage at or below which the status bar label turns the warning color. |
 | Warning color | Yellow `#FFFF00` | Color used when quota is at or below the warning threshold (but above critical). |
 
@@ -152,7 +152,7 @@ The widget updates its label and tooltip according to the current authentication
   - Label: a percentage formatted with one decimal (resource key: `statusbar_widget_available`, e.g. `50.0%`).
   - Tooltip: HTML table with "Remaining" and "Renewal" fields (resource key: `statusbar_tooltip_html`). If a renewal timestamp is provided it is shown in the user's local timezone.
   - Color coding: the percentage label is colored based on configurable thresholds (set in **Settings → Tools → GitHub Copilot Premium Quota Monitor**):
-    - at or below **critical** threshold (default 10%) → critical color (default red `#D32F2F`)
+    - at or below **critical** threshold (default 10%) → critical color (default pure red `#FF0000`)
     - at or below **warning** threshold (default 30%) → warning color (default yellow `#FFFF00`)
     - above warning threshold → default label color
 

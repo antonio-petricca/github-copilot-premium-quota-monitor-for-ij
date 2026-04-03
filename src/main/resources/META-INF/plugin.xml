@@ -52,6 +52,7 @@
                     <li>Changed the warning threshold default from 20% to 30%.</li>
                     <li>Configurable quota alert thresholds: set a custom <b>critical</b> (default 10%) and <b>warning</b> (default 30%) percentage threshold directly from Settings → Tools → GitHub Copilot Premium Quota Monitor.</li>
                     <li>Configurable alert colors: choose a custom color for each threshold; each setting includes a dedicated "Reset to default" button for convenience.</li>
+                    <li>Changed default critical color to pure red.</li>
                     <li>Changed default warning color from orange to yellow.</li>
                     <li>Fixed verify plugin Gradle task.</li>
                     <li>Inline cross-field validation in the Settings panel: the critical threshold is enforced to be strictly less than the warning threshold, with real-time feedback while editing.</li>

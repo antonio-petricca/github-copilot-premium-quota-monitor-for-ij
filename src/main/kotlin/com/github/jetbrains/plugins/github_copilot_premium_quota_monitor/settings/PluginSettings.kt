@@ -35,8 +35,8 @@ class PluginSettings : PersistentStateComponent<PluginSettings.State> {
         const val DEFAULT_CRITICAL_THRESHOLD = 10
         /** Quota % below which the widget turns yellow. Must satisfy: 1 < critical < warning < 100. */
         const val DEFAULT_WARNING_THRESHOLD  = 30
-        /** Default red color for the critical state (24-bit RGB). */
-        const val DEFAULT_CRITICAL_COLOR_RGB = 0xD32F2F
+        /** Default pure red color for the critical state (24-bit RGB). */
+        const val DEFAULT_CRITICAL_COLOR_RGB = 0xFF0000
         /** Default yellow color for the warning state (24-bit RGB). */
         const val DEFAULT_WARNING_COLOR_RGB  = 0xFFFF00
 
