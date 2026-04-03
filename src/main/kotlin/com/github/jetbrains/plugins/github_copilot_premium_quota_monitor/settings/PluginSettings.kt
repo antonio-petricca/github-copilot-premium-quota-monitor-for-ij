@@ -33,12 +33,12 @@ class PluginSettings : PersistentStateComponent<PluginSettings.State> {
 
         /** Quota % below which the widget turns red. Must satisfy: 1 < critical < warning < 100. */
         const val DEFAULT_CRITICAL_THRESHOLD = 10
-        /** Quota % below which the widget turns orange. Must satisfy: 1 < critical < warning < 100. */
+        /** Quota % below which the widget turns yellow. Must satisfy: 1 < critical < warning < 100. */
         const val DEFAULT_WARNING_THRESHOLD  = 30
-        /** Default red color for the critical state (24-bit RGB, light theme). */
+        /** Default red color for the critical state (24-bit RGB). */
         const val DEFAULT_CRITICAL_COLOR_RGB = 0xD32F2F
-        /** Default orange color for the warning state (24-bit RGB, light theme). */
-        const val DEFAULT_WARNING_COLOR_RGB  = 0xF57C00
+        /** Default yellow color for the warning state (24-bit RGB). */
+        const val DEFAULT_WARNING_COLOR_RGB  = 0xFFFF00
 
         const val MIN_THRESHOLD = 2   // critical > 1
         const val MAX_THRESHOLD = 99  // warning < 100
@@ -73,7 +73,7 @@ class PluginSettings : PersistentStateComponent<PluginSettings.State> {
         get() = myState.criticalColorRgb
         set(value) { myState.criticalColorRgb = value and 0xFFFFFF }
 
-    /** Quota percentage threshold below which the status bar label turns the warning (orange) color. */
+    /** Quota percentage threshold below which the status bar label turns the warning (yellow) color. */
     var warningThreshold: Int
         get() = myState.warningThreshold
         set(value) { myState.warningThreshold = value.coerceIn(MIN_THRESHOLD, MAX_THRESHOLD) }
