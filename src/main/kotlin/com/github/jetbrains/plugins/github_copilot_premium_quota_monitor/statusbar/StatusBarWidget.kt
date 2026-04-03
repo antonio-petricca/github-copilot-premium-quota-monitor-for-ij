@@ -35,6 +35,8 @@ import java.awt.Point
 import java.awt.Toolkit
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -181,7 +183,7 @@ class CopilotQuotaStatusBarWidget(
     private fun updateLabel(result: PluginService.QuotaResult) {
         label.text = when (result) {
             is PluginService.QuotaResult.Loading   -> Messages.get("statusbar_widget_initial")
-            is PluginService.QuotaResult.Available -> Messages.format("statusbar_widget_available", String.format("%.1f", result.quota.percentRemaining))
+            is PluginService.QuotaResult.Available -> Messages.format("statusbar_widget_available", formatRemainingPercent(result.quota.percentRemaining))
             is PluginService.QuotaResult.Unlimited -> Messages.get("statusbar_widget_unlimited")
             is PluginService.QuotaResult.NoAccount -> Messages.get("statusbar_widget_signin")
             is PluginService.QuotaResult.Error     -> Messages.get("statusbar_widget_error")
@@ -195,9 +197,9 @@ class CopilotQuotaStatusBarWidget(
                 val total = result.quota.quotaTotal
                 if (total != null) {
                     val totalStr = String.format("%.0f", total)
-                    Messages.format("statusbar_tooltip_html_with_total", String.format("%.1f", result.quota.percentRemaining), formatted, interactions, totalStr)
+                    Messages.format("statusbar_tooltip_html_with_total", formatRemainingPercent(result.quota.percentRemaining), formatted, interactions, totalStr)
                 } else {
-                    Messages.format("statusbar_tooltip_html", String.format("%.1f", result.quota.percentRemaining), formatted, interactions)
+                    Messages.format("statusbar_tooltip_html", formatRemainingPercent(result.quota.percentRemaining), formatted, interactions)
                 }
             }
             is PluginService.QuotaResult.Unlimited -> Messages.get("statusbar_tooltip_unlimited")
@@ -276,6 +278,12 @@ class CopilotQuotaStatusBarWidget(
             label.foreground = dimColor   // 1st blink: start dim
             t.start()
         }
+    }
+
+    // Keep one decimal digit for non-integer values and drop trailing ".0".
+    private fun formatRemainingPercent(value: Double): String {
+        val normalized = BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP).stripTrailingZeros()
+        return normalized.toPlainString()
     }
 
     // Format an ISO-8601 timestamp string into the current locale date/time format.

@@ -49,6 +49,7 @@
                 <br/>
                 <ul>
                     <li>Fixed verify plugin gradle task.</li>
+                    <li>Refined quota display precision: integer percentages are now shown without trailing decimals, and non-integer values keep one decimal digit.</li>
                 </ul>
             </p>
 
