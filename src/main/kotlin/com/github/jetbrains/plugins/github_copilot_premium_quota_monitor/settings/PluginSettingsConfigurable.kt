@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.ConfigurationException
 import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.ColorPanel
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
@@ -12,6 +13,8 @@ import java.awt.Color
 import javax.swing.JComponent
 import javax.swing.JSpinner
 import javax.swing.SpinnerNumberModel
+import javax.swing.SwingUtilities
+import javax.swing.event.ChangeListener
 
 /**
  * Settings panel for the GitHub Copilot Premium Quota Monitor plugin,
@@ -22,6 +25,8 @@ import javax.swing.SpinnerNumberModel
  * that the status-bar widget can react on the fly.
  *
  * Constraint enforced on apply: 1 < criticalThreshold < warningThreshold < 100.
+ * The same constraint is also validated inline (on change and on focus loss) via
+ * `validationOnInput` so the user receives immediate feedback while editing.
  */
 class PluginSettingsConfigurable : Configurable {
 
@@ -36,6 +41,13 @@ class PluginSettingsConfigurable : Configurable {
     private var criticalColor: ColorPanel? = null
     private var warningSpinner: JSpinner?  = null
     private var warningColor: ColorPanel?  = null
+
+    /**
+     * Reference to the built [DialogPanel] so that [ChangeListener]s on both
+     * spinners can call [DialogPanel.validateAll] and refresh the inline error
+     * indicator on the **other** spinner as well (cross-field validation).
+     */
+    private var dialogPanel: DialogPanel? = null
 
     // ── Configurable ──────────────────────────────────────────────────────────
 
@@ -67,7 +79,7 @@ class PluginSettingsConfigurable : Configurable {
         @Suppress("UseJBColor")
         warningColor = ColorPanel().also { it.selectedColor = Color(s.warningColorRgb) }
 
-        return panel {
+        val p = panel {
 
             // ── Auto-refresh ──────────────────────────────────────────────────
             row(Messages.get("settings_refresh_interval_label")) {
@@ -79,20 +91,43 @@ class PluginSettingsConfigurable : Configurable {
             group(Messages.get("settings_thresholds_group")) {
 
                 row(Messages.get("settings_critical_threshold_label")) {
-                    cell(criticalSpinner!!).widthGroup("thresholdSpinner")
+                    cell(criticalSpinner!!)
+                        .widthGroup("thresholdSpinner")
+                        .validationOnInput { sp ->
+                            val c = sp.value as? Int ?: return@validationOnInput null
+                            val w = warningSpinner?.value as? Int ?: return@validationOnInput null
+                            if (c >= w) error(Messages.get("settings_threshold_cross_validation_error"))
+                            else null
+                        }
                     label(Messages.get("settings_threshold_percent_unit"))
                     label(Messages.get("settings_threshold_color_label")).align(AlignX.RIGHT)
                     cell(criticalColor!!)
                 }.rowComment(Messages.get("settings_critical_threshold_comment"))
 
                 row(Messages.get("settings_warning_threshold_label")) {
-                    cell(warningSpinner!!).widthGroup("thresholdSpinner")
+                    cell(warningSpinner!!)
+                        .widthGroup("thresholdSpinner")
+                        .validationOnInput { sp ->
+                            val c = criticalSpinner?.value as? Int ?: return@validationOnInput null
+                            val w = sp.value as? Int ?: return@validationOnInput null
+                            if (c >= w) error(Messages.get("settings_threshold_cross_validation_error"))
+                            else null
+                        }
                     label(Messages.get("settings_threshold_percent_unit"))
                     label(Messages.get("settings_threshold_color_label")).align(AlignX.RIGHT)
                     cell(warningColor!!)
                 }.rowComment(Messages.get("settings_warning_threshold_comment"))
             }
         }
+
+        // When EITHER spinner changes, re-run ALL registered validators so that
+        // the inline error on the OTHER spinner also clears / appears at once.
+        val revalidate = ChangeListener { SwingUtilities.invokeLater { p.validateAll() } }
+        criticalSpinner!!.addChangeListener(revalidate)
+        warningSpinner!!.addChangeListener(revalidate)
+
+        dialogPanel = p
+        return p
     }
 
     override fun isModified(): Boolean {
@@ -109,7 +144,8 @@ class PluginSettingsConfigurable : Configurable {
         val critical = (criticalSpinner?.value as? Int) ?: PluginSettings.DEFAULT_CRITICAL_THRESHOLD
         val warning  = (warningSpinner?.value  as? Int) ?: PluginSettings.DEFAULT_WARNING_THRESHOLD
 
-        // Enforce: 1 < critical < warning < 100
+        // Enforce: 1 < critical < warning < 100 (safety net — inline validators should
+        // have already blocked Apply via the UI, but we guard here too).
         if (critical <= 1 || warning >= 100 || critical >= warning) {
             throw ConfigurationException(Messages.get("settings_threshold_validation_error"))
         }
@@ -150,6 +186,7 @@ class PluginSettingsConfigurable : Configurable {
         criticalColor   = null
         warningSpinner  = null
         warningColor    = null
+        dialogPanel     = null
     }
 }
 
