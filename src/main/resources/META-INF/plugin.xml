@@ -50,6 +50,7 @@
                 <ul>
                     <li>Fixed verify plugin gradle task.</li>
                     <li>Refined quota display precision: integer percentages are now shown without trailing decimals, and non-integer values keep one decimal digit.</li>
+                    <li>UI branding polish: unified casing to "GitHub Copilot" and applied context-aware naming policy (full name for detailed views, "GHCP" for status bar) to improve user experience across all translations.</li>
                 </ul>
             </p>
 
