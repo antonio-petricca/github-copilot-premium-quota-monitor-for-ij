@@ -48,7 +48,7 @@
                 <strong>Version 1.0.4</strong>
                 <br/>
                 <ul>
-                    <li>Changed the orange threshold from 20% to 30%.</li>
+                    <li>Changed the orange (warning) threshold from 20% to 30%.</li>
                     <li>Fixed verify plugin gradle task.</li>
                     <li>Refined quota display precision: integer percentages are now shown without trailing decimals, and non-integer values keep one decimal digit.</li>
                     <li>UI branding polish: unified casing to "GitHub Copilot" and applied context-aware naming policy (full name for detailed views, "GHCP" for status bar) to improve user experience across all translations.</li>
