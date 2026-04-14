@@ -46,6 +46,14 @@
     <change-notes>
         <![CDATA[
             <p>
+                <strong>Version 1.0.5</strong>
+                <br/>
+                <ul>
+                    <li>Changed the status bar widget for unlimited quota to display only the infinity symbol (∞) across all supported languages.</li>
+                </ul>
+            </p>
+
+            <p>
                 <strong>Version 1.0.4</strong>
                 <br/>
                 <ul>
