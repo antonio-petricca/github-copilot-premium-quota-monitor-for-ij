@@ -30,12 +30,14 @@ import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
 import com.intellij.openapi.diagnostic.Logger
 import java.awt.Color
+import java.awt.Desktop
 import java.awt.Point
 import java.awt.Toolkit
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -333,10 +335,11 @@ class CopilotQuotaStatusBarWidget(
  * Context menu shown on left-click.
  *
  * Order:
- *   1. Settings…
- *   2. Refresh
+ *   1. Refresh
+ *   2. Settings…
+ *   3. Open GitHub Copilot Dashboard
  *   ─────────────
- *   3. Sign in  /  Sign out
+ *   4. Sign in  /  Sign out
  *
  * [onRefresh] is invoked when the user selects "Refresh"; defaults to a plain
  * [PluginService.refreshQuota] call but callers may supply the widget's own
@@ -353,7 +356,13 @@ class CopilotQuotaPopupGroup(
             SignOutAction()
         else
             SignInAction(project)
-        return arrayOf(OpenSettingsAction(project), RefreshAction(onRefresh), Separator.getInstance(), signAction)
+        return arrayOf(
+            RefreshAction(onRefresh),
+            OpenSettingsAction(project),
+            OpenDashboardAction(),
+            Separator.getInstance(),
+            signAction,
+        )
     }
 }
 
@@ -452,6 +461,30 @@ class OpenSettingsAction(private val project: Project) : AnAction(
 ) {
     override fun actionPerformed(e: AnActionEvent) {
         ShowSettingsUtil.getInstance().showSettingsDialog(project, PluginSettingsConfigurable::class.java)
+    }
+}
+
+/** Opens the GitHub Copilot management dashboard in the system browser. */
+class OpenDashboardAction : AnAction(
+    Messages.get("statusbar_action_open_dashboard"),
+    null,
+    AllIcons.Ide.External_link_arrow,
+) {
+
+    companion object {
+        private val LOG = Logger.getInstance(OpenDashboardAction::class.java)
+        private const val DASHBOARD_URL = "https://github.com/settings/copilot"
+    }
+
+    override fun actionPerformed(e: AnActionEvent) {
+        LOG.info("Opening GitHub Copilot dashboard in browser")
+        try {
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().browse(URI(DASHBOARD_URL))
+            }
+        } catch (ex: Exception) {
+            LOG.warn("Failed to open GitHub Copilot dashboard", ex)
+        }
     }
 }
 
