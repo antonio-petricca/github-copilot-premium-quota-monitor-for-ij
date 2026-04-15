@@ -46,6 +46,15 @@
     <change-notes>
         <![CDATA[
             <p>
+                <strong>Version 1.0.6</strong>
+                <br/>
+                <ul>
+                    <li>Fixed HTTP connection resource leak: <code>HttpURLConnection.disconnect()</code> is now always called in a <code>finally</code> block for all API requests (quota fetch, device code, token poll, username fetch).</li>
+                    <li>Fixed response stream resource leak: <code>BufferedReader</code> instances are now closed via <code>use {}</code> after reading the response body.</li>
+                </ul>
+            </p>
+
+            <p>
                 <strong>Version 1.0.5</strong>
                 <br/>
                 <ul>
