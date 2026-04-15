@@ -1,5 +1,6 @@
 package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services
 
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.PluginInfo
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
 import com.google.gson.JsonParser
 import com.intellij.credentialStore.CredentialAttributes
@@ -176,22 +177,26 @@ class AuthService {
         LOG.info("Requesting device code from GitHub")
 
         val conn = post(DEVICE_CODE_URL, "client_id=${enc(CLIENT_ID)}&scope=${enc(SCOPE)}")
-        val code = conn.responseCode
-        if (code != HttpURLConnection.HTTP_OK) {
-            LOG.error("Device code request failed with HTTP $code")
+        try {
+            val code = conn.responseCode
+            if (code != HttpURLConnection.HTTP_OK) {
+                LOG.error("Device code request failed with HTTP $code")
 
-            throw RuntimeException(Messages.format("auth_device_code_http_error", code))
-        }
+                throw RuntimeException(Messages.format("auth_device_code_http_error", code))
+            }
 
-        val json = JsonParser.parseString(conn.inputStream.bufferedReader().readText()).asJsonObject
-        return DeviceCodeResponse(
-            deviceCode      = json["device_code"]?.asString      ?: error(Messages.get("auth_missing_device_code")),
-            userCode        = json["user_code"]?.asString        ?: error(Messages.get("auth_missing_user_code")),
-            verificationUri = json["verification_uri"]?.asString ?: "https://github.com/login/device",
-            interval        = json["interval"]?.asInt            ?: 5,
-            expiresIn       = json["expires_in"]?.asInt          ?: 900,
-        ).also {
-            LOG.debug("Device code obtained, expires in ${it.expiresIn} seconds")
+            val json = JsonParser.parseString(conn.inputStream.bufferedReader().use { it.readText() }).asJsonObject
+            return DeviceCodeResponse(
+                deviceCode      = json["device_code"]?.asString      ?: error(Messages.get("auth_missing_device_code")),
+                userCode        = json["user_code"]?.asString        ?: error(Messages.get("auth_missing_user_code")),
+                verificationUri = json["verification_uri"]?.asString ?: "https://github.com/login/device",
+                interval        = json["interval"]?.asInt            ?: 5,
+                expiresIn       = json["expires_in"]?.asInt          ?: 900,
+            ).also {
+                LOG.debug("Device code obtained, expires in ${it.expiresIn} seconds")
+            }
+        } finally {
+            conn.disconnect()
         }
     }
 
@@ -208,36 +213,40 @@ class AuthService {
                        "&device_code=${enc(deviceCode)}" +
                        "&grant_type=${enc("urn:ietf:params:oauth:grant-type:device_code")}"
             val conn = post(ACCESS_TOKEN_URL, body)
-            if (conn.responseCode != HttpURLConnection.HTTP_OK) {
-                LOG.debug("Poll returned HTTP ${conn.responseCode}")
+            try {
+                if (conn.responseCode != HttpURLConnection.HTTP_OK) {
+                    LOG.debug("Poll returned HTTP ${conn.responseCode}")
 
-                return PollResult.Error(Messages.format("auth_poll_http_error", conn.responseCode))
-            }
-
-            val json  = JsonParser.parseString(conn.inputStream.bufferedReader().readText()).asJsonObject
-            val token = json["access_token"]?.asString
-            if (!token.isNullOrBlank()) {
-                LOG.info("Access token successfully obtained")
-
-                return PollResult.Success(token)
-            }
-
-            when (json["error"]?.asString) {
-                "authorization_pending", "slow_down" -> {
-                    LOG.debug("Device flow still pending")
-
-                    PollResult.Pending
+                    return PollResult.Error(Messages.format("auth_poll_http_error", conn.responseCode))
                 }
-                "expired_token" -> {
-                    LOG.warn("Device code expired")
 
-                    PollResult.Expired
-                }
-                else -> {
-                    LOG.warn("Device flow error: ${json["error"]?.asString}")
+                val json  = JsonParser.parseString(conn.inputStream.bufferedReader().use { it.readText() }).asJsonObject
+                val token = json["access_token"]?.asString
+                if (!token.isNullOrBlank()) {
+                    LOG.info("Access token successfully obtained")
 
-                    PollResult.Error(json["error_description"]?.asString ?: Messages.get("auth_unknown_error"))
+                    return PollResult.Success(token)
                 }
+
+                when (json["error"]?.asString) {
+                    "authorization_pending", "slow_down" -> {
+                        LOG.debug("Device flow still pending")
+
+                        PollResult.Pending
+                    }
+                    "expired_token" -> {
+                        LOG.warn("Device code expired")
+
+                        PollResult.Expired
+                    }
+                    else -> {
+                        LOG.warn("Device flow error: ${json["error"]?.asString}")
+
+                        PollResult.Error(json["error_description"]?.asString ?: Messages.get("auth_unknown_error"))
+                    }
+                }
+            } finally {
+                conn.disconnect()
             }
         } catch (e: Exception) {
             LOG.warn("Device-flow poll error", e)
@@ -252,14 +261,18 @@ class AuthService {
             requestMethod = "GET"
             setRequestProperty("Authorization", "Bearer $token")
             setRequestProperty("Accept",        "application/vnd.github+json")
-            setRequestProperty("User-Agent",    "github-copilot-quota-monitor-ij/1.0")
+            setRequestProperty("User-Agent",    PluginInfo.userAgent)
             connectTimeout = 10_000
             readTimeout    = 10_000
         }
-        if (conn.responseCode == HttpURLConnection.HTTP_OK)
-            JsonParser.parseString(conn.inputStream.bufferedReader().readText())
-                .asJsonObject["login"]?.asString
-        else null
+        try {
+            if (conn.responseCode == HttpURLConnection.HTTP_OK)
+                JsonParser.parseString(conn.inputStream.bufferedReader().use { it.readText() })
+                    .asJsonObject["login"]?.asString
+            else null
+        } finally {
+            conn.disconnect()
+        }
     } catch (e: Exception) {
         LOG.warn("Failed to fetch GitHub username", e)
         null

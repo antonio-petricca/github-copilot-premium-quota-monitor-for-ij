@@ -1,5 +1,6 @@
 package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services
 
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.PluginInfo
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -133,32 +134,36 @@ class PluginService {
                 requestMethod = "GET"
                 setRequestProperty("Authorization",         "token $token")
                 setRequestProperty("Accept",                "application/json")
-                setRequestProperty("User-Agent",            "github-copilot-quota-monitor-ij/1.0")
+                setRequestProperty("User-Agent",            PluginInfo.userAgent)
                 setRequestProperty("Copilot-Integration-Id", "JetBrainsIDE")
                 connectTimeout = 10_000
                 readTimeout    = 10_000
             }
 
-            when (val responseCode = conn.responseCode) {
-                HttpURLConnection.HTTP_OK -> {
-                    LOG.debug("GitHub API returned 200 OK")
+            try {
+                when (val responseCode = conn.responseCode) {
+                    HttpURLConnection.HTTP_OK -> {
+                        LOG.debug("GitHub API returned 200 OK")
 
-                    parseQuota(conn.inputStream.bufferedReader().readText())
+                        parseQuota(conn.inputStream.bufferedReader().use { it.readText() })
+                    }
+
+                    HttpURLConnection.HTTP_UNAUTHORIZED,
+                    HttpURLConnection.HTTP_FORBIDDEN -> {
+                        LOG.warn("Quota fetch returned $responseCode - clearing authentication")
+
+                        AuthService.getInstance().clearAuthentication()
+                        QuotaResult.NoAccount(Messages.format("general_token_invalid", responseCode))
+                    }
+
+                    else -> {
+                        LOG.warn("Quota fetch returned unexpected HTTP $responseCode")
+
+                        QuotaResult.Error(Messages.format("general_api_http", responseCode))
+                    }
                 }
-
-                HttpURLConnection.HTTP_UNAUTHORIZED,
-                HttpURLConnection.HTTP_FORBIDDEN -> {
-                    LOG.warn("Quota fetch returned $responseCode - clearing authentication")
-
-                    AuthService.getInstance().clearAuthentication()
-                    QuotaResult.NoAccount(Messages.format("general_token_invalid", responseCode))
-                }
-
-                else -> {
-                    LOG.warn("Quota fetch returned unexpected HTTP $responseCode")
-
-                    QuotaResult.Error(Messages.format("general_api_http", responseCode))
-                }
+            } finally {
+                conn.disconnect()
             }
         } catch (e: Exception) {
             LOG.warn("Failed to fetch Copilot quota", e)
