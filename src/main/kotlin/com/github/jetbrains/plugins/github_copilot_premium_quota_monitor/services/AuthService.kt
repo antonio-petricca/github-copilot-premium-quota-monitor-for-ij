@@ -1,5 +1,6 @@
 package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services
 
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.PluginInfo
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
 import com.google.gson.JsonParser
 import com.intellij.credentialStore.CredentialAttributes
@@ -260,7 +261,7 @@ class AuthService {
             requestMethod = "GET"
             setRequestProperty("Authorization", "Bearer $token")
             setRequestProperty("Accept",        "application/vnd.github+json")
-            setRequestProperty("User-Agent",    "github-copilot-quota-monitor-ij/1.0")
+            setRequestProperty("User-Agent",    PluginInfo.userAgent)
             connectTimeout = 10_000
             readTimeout    = 10_000
         }

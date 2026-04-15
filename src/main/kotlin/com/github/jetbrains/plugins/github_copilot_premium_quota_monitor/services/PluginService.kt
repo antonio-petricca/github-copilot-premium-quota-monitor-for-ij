@@ -1,5 +1,6 @@
 package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services
 
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.PluginInfo
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -133,7 +134,7 @@ class PluginService {
                 requestMethod = "GET"
                 setRequestProperty("Authorization",         "token $token")
                 setRequestProperty("Accept",                "application/json")
-                setRequestProperty("User-Agent",            "github-copilot-quota-monitor-ij/1.0")
+                setRequestProperty("User-Agent",            PluginInfo.userAgent)
                 setRequestProperty("Copilot-Integration-Id", "JetBrainsIDE")
                 connectTimeout = 10_000
                 readTimeout    = 10_000
