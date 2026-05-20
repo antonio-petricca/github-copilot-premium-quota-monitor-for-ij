@@ -46,6 +46,14 @@
     <change-notes>
         <![CDATA[
             <p>
+                <strong>Version 1.0.7</strong>
+                <br/>
+                <ul>
+                    <li>Fixed: Internal API is private and must not be used outside of the IntelliJ Platform itself. Please proceed with the next steps described in this article - PluginManagerCore.getPlugin(PluginId).
+                </ul>
+            </p>
+
+            <p>
                 <strong>Version 1.0.6</strong>
                 <br/>
                 <ul>
