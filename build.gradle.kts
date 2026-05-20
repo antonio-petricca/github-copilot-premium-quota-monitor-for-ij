@@ -54,6 +54,12 @@ intellijPlatform {
 }
 
 tasks {
+    processResources {
+        filesMatching("plugin-version.properties") {
+            expand("version" to pluginVersion)
+        }
+    }
+
     withType<JavaCompile> {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
