@@ -197,10 +197,10 @@ class CopilotQuotaStatusBarWidget(
             is PluginService.QuotaResult.Available -> {
                 val ts = result.quota.renewalDate
                 val formatted = if (ts != null) formatTimestamp(ts) else ""
-                val interactions = result.quota.quotaRemaining?.let { String.format("%.0f", it) } ?: ""
+                val interactions = result.quota.quotaRemaining?.let { formatDecimal(it) } ?: ""
                 val total = result.quota.quotaTotal
                 if (total != null) {
-                    val totalStr = String.format("%.0f", total)
+                    val totalStr = formatDecimal(total)
                     Messages.format("statusbar_tooltip_html_with_total", formatRemainingPercent(result.quota.percentRemaining), formatted, interactions, totalStr)
                 } else {
                     Messages.format("statusbar_tooltip_html", formatRemainingPercent(result.quota.percentRemaining), formatted, interactions)
@@ -286,7 +286,11 @@ class CopilotQuotaStatusBarWidget(
     }
 
     // Keep one decimal digit for non-integer values and drop trailing ".0".
-    private fun formatRemainingPercent(value: Double): String {
+    private fun formatRemainingPercent(value: Double): String = formatDecimal(value)
+
+    // Keep one decimal digit for non-integer values and drop trailing ".0"
+    // (e.g. AI credits / quota counts: 12.5 → "12.5", 12.0 → "12").
+    private fun formatDecimal(value: Double): String {
         val normalized = BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP).stripTrailingZeros()
         return normalized.toPlainString()
     }
