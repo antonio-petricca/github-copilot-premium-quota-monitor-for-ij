@@ -170,12 +170,20 @@ class PluginSettingsConfigurable : Configurable {
                 row(Messages.get("settings_ghe_type_label")) {
                     gheTypeCombo = comboBox(
                         listOf(GitHubServerType.GITHUB_COM, GitHubServerType.ENTERPRISE_CLOUD, GitHubServerType.ENTERPRISE_SERVER),
-                        renderer = SimpleListCellRenderer.create { label, type, _ ->
-                            label.text = when (type) {
-                                GitHubServerType.GITHUB_COM        -> Messages.get("settings_ghe_type_none")
-                                GitHubServerType.ENTERPRISE_CLOUD  -> Messages.get("settings_ghe_type_cloud")
-                                GitHubServerType.ENTERPRISE_SERVER -> Messages.get("settings_ghe_type_server")
-                                else                                -> ""
+                        renderer = object : SimpleListCellRenderer<GitHubServerType>() {
+                            override fun customize(
+                                list: javax.swing.JList<out GitHubServerType>,
+                                value: GitHubServerType?,
+                                index: Int,
+                                selected: Boolean,
+                                hasFocus: Boolean,
+                            ) {
+                                text = when (value) {
+                                    GitHubServerType.GITHUB_COM        -> Messages.get("settings_ghe_type_none")
+                                    GitHubServerType.ENTERPRISE_CLOUD  -> Messages.get("settings_ghe_type_cloud")
+                                    GitHubServerType.ENTERPRISE_SERVER -> Messages.get("settings_ghe_type_server")
+                                    else                                -> ""
+                                }
                             }
                         },
                     ).component

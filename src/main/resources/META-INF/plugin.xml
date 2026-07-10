@@ -47,11 +47,18 @@
     <change-notes>
         <![CDATA[
             <p>
+                <strong>Version 1.1.2</strong>
+                <br/>
+                <ul>
+                    <li>Fixed: replaced usage of the deprecated <code>SimpleListCellRenderer.create(Function)</code> API (scheduled for removal in a future release) with a non-deprecated <code>SimpleListCellRenderer</code> subclass overriding <code>customize()</code> in the GitHub deployment combo box renderer.</li>
+                </ul>
+            </p>
+
+            <p>
                 <strong>Version 1.1.1</strong>
                 <br/>
                 <ul>
                     <li>Fixed: AI credits (remaining/total) shown in the status bar tooltip were always rounded to an integer; they are now formatted like other decimal values, keeping one decimal digit only when the value is not a whole number.</li>
-                    <li>Fixed: replaced usage of the deprecated <code>SimpleListCellRenderer.create(String, Function)</code> API (scheduled for removal in a future release) with the non-deprecated single-argument overload in the GitHub Enterprise deployment combo box renderer.</li>
                     <li>Renamed the "GitHub Enterprise" settings group label to "Authentication Method", since the section also includes the default github.com option (not only the Enterprise Cloud/Server deployments), updated across all supported languages.</li>
                 </ul>
             </p>
