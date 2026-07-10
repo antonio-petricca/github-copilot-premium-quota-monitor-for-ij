@@ -1,15 +1,21 @@
 package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings
 
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.services.AuthService
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.ConfigurationException
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.openapi.ui.Messages as UiMessages
 import com.intellij.ui.ColorPanel
+import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.AlignX
+import com.intellij.ui.dsl.builder.Cell
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.builder.selected
 import java.awt.Color
 import javax.swing.JButton
 import javax.swing.JComponent
@@ -43,6 +49,11 @@ class PluginSettingsConfigurable : Configurable {
     private var criticalColor: ColorPanel? = null
     private var warningSpinner: JSpinner?  = null
     private var warningColor: ColorPanel?  = null
+
+    // GitHub Enterprise Server (GHE)
+    private var gheEnabledCheckBox: JBCheckBox? = null
+    private var gheUrlField: JBTextField?        = null
+    private var gheClientIdField: JBTextField?   = null
 
     /**
      * Reference to the built [DialogPanel] so that [ChangeListener]s on both
@@ -154,6 +165,39 @@ class PluginSettingsConfigurable : Configurable {
                     cell(resetButton(::resetWarning))
                 }.rowComment(Messages.get("settings_warning_threshold_comment"))
             }
+
+            // ── GitHub Enterprise Server section ──────────────────────────────
+            group(Messages.get("settings_ghe_group")) {
+                lateinit var enableCell: Cell<JBCheckBox>
+
+                row {
+                    enableCell = checkBox(Messages.get("settings_ghe_enable_label"))
+                    gheEnabledCheckBox = enableCell.component
+                }.rowComment(Messages.get("settings_ghe_enable_comment"))
+
+                row(Messages.get("settings_ghe_url_label")) {
+                    gheUrlField = textField().align(AlignX.FILL)
+                        .validationOnInput { tf ->
+                            if (gheEnabledCheckBox?.isSelected == true) {
+                                val v = tf.text.trim()
+                                if (v.isBlank() || !(v.startsWith("http://") || v.startsWith("https://")))
+                                    error(Messages.get("settings_ghe_url_validation_error"))
+                                else null
+                            } else null
+                        }.component
+                }.rowComment(Messages.get("settings_ghe_url_comment"))
+                 .enabledIf(enableCell.selected)
+
+                row(Messages.get("settings_ghe_client_id_label")) {
+                    gheClientIdField = textField().align(AlignX.FILL)
+                        .validationOnInput { tf ->
+                            if (gheEnabledCheckBox?.isSelected == true && tf.text.isBlank())
+                                error(Messages.get("settings_ghe_client_id_validation_error"))
+                            else null
+                        }.component
+                }.rowComment(Messages.get("settings_ghe_client_id_comment"))
+                 .enabledIf(enableCell.selected)
+            }
         }
 
         // When EITHER spinner changes, re-run ALL registered validators so that
@@ -173,6 +217,9 @@ class PluginSettingsConfigurable : Configurable {
             || (criticalColor?.selectedColor?.rgb?.and(0xFFFFFF)) != s.criticalColorRgb
             || (warningSpinner?.value  as? Int) != s.warningThreshold
             || (warningColor?.selectedColor?.rgb?.and(0xFFFFFF))  != s.warningColorRgb
+            || (gheEnabledCheckBox?.isSelected ?: false)          != s.useGitHubEnterprise
+            || (gheUrlField?.text?.trim() ?: "")                  != s.gitHubEnterpriseUrl
+            || (gheClientIdField?.text?.trim() ?: "")             != s.gitHubEnterpriseClientId
     }
 
     @Throws(ConfigurationException::class)
@@ -189,10 +236,35 @@ class PluginSettingsConfigurable : Configurable {
             )
         }
 
+        val gheEnabled  = gheEnabledCheckBox?.isSelected ?: false
+        val gheUrl      = gheUrlField?.text?.trim() ?: ""
+        val gheClientId = gheClientIdField?.text?.trim() ?: ""
+
+        // Enforce GHE constraints (safety net — inline validators should have
+        // already blocked Apply via the UI, but we guard here too).
+        if (gheEnabled && (gheUrl.isBlank() || !(gheUrl.startsWith("http://") || gheUrl.startsWith("https://")))) {
+            throw ConfigurationException(
+                Messages.get("settings_ghe_url_validation_error"),
+                Messages.get("settings_ghe_validation_title"),
+            )
+        }
+        if (gheEnabled && gheClientId.isBlank()) {
+            throw ConfigurationException(
+                Messages.get("settings_ghe_client_id_validation_error"),
+                Messages.get("settings_ghe_validation_title"),
+            )
+        }
+
         val s = PluginSettings.getInstance()
 
         LOG.info("Applying settings: refreshInterval=${(refreshSpinner?.value as? Int)}, " +
-                 "critical=$critical, warning=$warning")
+                 "critical=$critical, warning=$warning, gheEnabled=$gheEnabled")
+
+        // Detect whether the GHE server configuration actually changed, so we can
+        // force a re-authentication (an existing token is bound to a single host).
+        val gheConfigChanged = gheEnabled != s.useGitHubEnterprise
+            || gheUrl != s.gitHubEnterpriseUrl
+            || gheClientId != s.gitHubEnterpriseClientId
 
         s.refreshIntervalMinutes = (refreshSpinner?.value as? Int) ?: PluginSettings.DEFAULT_INTERVAL_MINUTES
         s.criticalThreshold      = critical
@@ -201,6 +273,19 @@ class PluginSettingsConfigurable : Configurable {
         s.warningThreshold       = warning
         s.warningColorRgb        = warningColor?.selectedColor?.rgb?.and(0xFFFFFF)
                                    ?: PluginSettings.DEFAULT_WARNING_COLOR_RGB
+        s.useGitHubEnterprise        = gheEnabled
+        s.gitHubEnterpriseUrl        = gheUrl
+        s.gitHubEnterpriseClientId   = gheClientId
+
+        if (gheConfigChanged && AuthService.getInstance().isAuthenticatedCached()) {
+            LOG.info("GitHub Enterprise Server configuration changed — clearing existing authentication")
+
+            AuthService.getInstance().clearAuthentication()
+            UiMessages.showInfoMessage(
+                Messages.get("settings_ghe_reauth_required_msg"),
+                Messages.get("settings_ghe_reauth_required_title"),
+            )
+        }
 
         // Broadcast to all subscribers (e.g. status-bar widget).
         ApplicationManager.getApplication().messageBus
@@ -217,6 +302,9 @@ class PluginSettingsConfigurable : Configurable {
         warningSpinner?.value  = s.warningThreshold
         @Suppress("UseJBColor")
         warningColor?.selectedColor  = Color(s.warningColorRgb)
+        gheEnabledCheckBox?.isSelected = s.useGitHubEnterprise
+        gheUrlField?.text              = s.gitHubEnterpriseUrl
+        gheClientIdField?.text         = s.gitHubEnterpriseClientId
     }
 
     override fun disposeUIResources() {
@@ -225,6 +313,9 @@ class PluginSettingsConfigurable : Configurable {
         criticalColor   = null
         warningSpinner  = null
         warningColor    = null
+        gheEnabledCheckBox = null
+        gheUrlField        = null
+        gheClientIdField   = null
         dialogPanel     = null
     }
 }

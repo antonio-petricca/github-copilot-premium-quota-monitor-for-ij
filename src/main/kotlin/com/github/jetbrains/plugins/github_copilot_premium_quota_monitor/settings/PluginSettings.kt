@@ -24,6 +24,10 @@ class PluginSettings : PersistentStateComponent<PluginSettings.State> {
         var criticalColorRgb: Int       = DEFAULT_CRITICAL_COLOR_RGB,
         var warningThreshold: Int       = DEFAULT_WARNING_THRESHOLD,
         var warningColorRgb: Int        = DEFAULT_WARNING_COLOR_RGB,
+        // GitHub Enterprise Server (GHE) authentication
+        var useGitHubEnterprise: Boolean     = false,
+        var gitHubEnterpriseUrl: String      = "",
+        var gitHubEnterpriseClientId: String = "",
     )
 
     companion object {
@@ -82,5 +86,22 @@ class PluginSettings : PersistentStateComponent<PluginSettings.State> {
     var warningColorRgb: Int
         get() = myState.warningColorRgb
         set(value) { myState.warningColorRgb = value and 0xFFFFFF }
+
+    // ── GitHub Enterprise Server (GHE) ────────────────────────────────────────
+
+    /** Whether authentication and API calls should target a GitHub Enterprise Server instance. */
+    var useGitHubEnterprise: Boolean
+        get() = myState.useGitHubEnterprise
+        set(value) { myState.useGitHubEnterprise = value }
+
+    /** Base URL of the GitHub Enterprise Server instance (e.g. `https://github.example.com`), no trailing slash. */
+    var gitHubEnterpriseUrl: String
+        get() = myState.gitHubEnterpriseUrl
+        set(value) { myState.gitHubEnterpriseUrl = value.trim().trimEnd('/') }
+
+    /** OAuth App Client ID registered on the GitHub Enterprise Server instance (Device Flow enabled). */
+    var gitHubEnterpriseClientId: String
+        get() = myState.gitHubEnterpriseClientId
+        set(value) { myState.gitHubEnterpriseClientId = value.trim() }
 }
 

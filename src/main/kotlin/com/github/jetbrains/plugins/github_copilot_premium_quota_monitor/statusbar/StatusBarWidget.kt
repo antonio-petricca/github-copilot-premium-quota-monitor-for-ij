@@ -473,14 +473,13 @@ class OpenDashboardAction : AnAction(
 
     companion object {
         private val LOG = Logger.getInstance(OpenDashboardAction::class.java)
-        private const val DASHBOARD_URL = "https://github.com/settings/copilot"
     }
 
     override fun actionPerformed(e: AnActionEvent) {
         LOG.info("Opening GitHub Copilot dashboard in browser")
         try {
             if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().browse(URI(DASHBOARD_URL))
+                Desktop.getDesktop().browse(URI("${AuthService.getInstance().baseUrl()}/settings/copilot"))
             }
         } catch (ex: Exception) {
             LOG.warn("Failed to open GitHub Copilot dashboard", ex)

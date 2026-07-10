@@ -22,7 +22,6 @@ class PluginService {
 
     companion object {
         private val LOG = Logger.getInstance(PluginService::class.java)
-        private const val COPILOT_USER_API_URL = "https://api.github.com/copilot_internal/user"
 
         @JvmStatic
         fun getInstance(): PluginService =
@@ -130,7 +129,8 @@ class PluginService {
         return try {
             LOG.debug("Fetching quota from GitHub API")
 
-            val conn = (URI.create(COPILOT_USER_API_URL).toURL().openConnection() as HttpURLConnection).apply {
+            val quotaUrl = "${AuthService.getInstance().apiBaseUrl()}/copilot_internal/user"
+            val conn = (URI.create(quotaUrl).toURL().openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 setRequestProperty("Authorization",         "token $token")
                 setRequestProperty("Accept",                "application/json")

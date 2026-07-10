@@ -2,6 +2,7 @@ package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.servic
 
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.PluginInfo
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettings
 import com.google.gson.JsonParser
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.generateServiceName
@@ -36,12 +37,12 @@ class AuthService {
          * OAuth App client ID used for the Device Flow.
          * This is the publicly documented client ID for GitHub Copilot IDE integrations.
          * Device Flow does NOT require a client secret on the client side (RFC 8628 §7).
+         * Used only when GitHub Enterprise Server authentication is not enabled (see [effectiveClientId]).
          */
         const val CLIENT_ID = "Iv1.b507a08c87ecfe98"
 
-        private const val DEVICE_CODE_URL  = "https://github.com/login/device/code"
-        private const val ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token"
-        private const val USER_API_URL     = "https://api.github.com/user"
+        private const val DEFAULT_BASE_URL     = "https://github.com"
+        private const val DEFAULT_API_BASE_URL = "https://api.github.com"
 
         /**
          * Scopes requested during the device flow.
@@ -164,6 +165,45 @@ class AuthService {
         notifyAuthStateChanged()
     }
 
+    // ── GitHub Enterprise Server (GHE) endpoints ─────────────────────────────
+
+    /**
+     * Base web URL: the configured GitHub Enterprise Server instance when enabled,
+     * otherwise `https://github.com`. Never has a trailing slash.
+     */
+    fun baseUrl(): String {
+        val s = PluginSettings.getInstance()
+        return if (s.useGitHubEnterprise && s.gitHubEnterpriseUrl.isNotBlank())
+            s.gitHubEnterpriseUrl
+        else
+            DEFAULT_BASE_URL
+    }
+
+    /**
+     * Base REST API URL: `{baseUrl}/api/v3` for GitHub Enterprise Server,
+     * otherwise `https://api.github.com`. Never has a trailing slash.
+     */
+    fun apiBaseUrl(): String {
+        val s = PluginSettings.getInstance()
+        return if (s.useGitHubEnterprise && s.gitHubEnterpriseUrl.isNotBlank())
+            "${baseUrl()}/api/v3"
+        else
+            DEFAULT_API_BASE_URL
+    }
+
+    /**
+     * Effective OAuth App Client ID: the custom Client ID configured for the
+     * GitHub Enterprise Server instance when enabled, otherwise the public
+     * [CLIENT_ID] used for github.com.
+     */
+    fun effectiveClientId(): String {
+        val s = PluginSettings.getInstance()
+        return if (s.useGitHubEnterprise && s.gitHubEnterpriseClientId.isNotBlank())
+            s.gitHubEnterpriseClientId
+        else
+            CLIENT_ID
+    }
+
     // ── Device Flow ───────────────────────────────────────────────────────────
 
     /**
@@ -176,7 +216,7 @@ class AuthService {
     fun requestDeviceCode(): DeviceCodeResponse {
         LOG.info("Requesting device code from GitHub")
 
-        val conn = post(DEVICE_CODE_URL, "client_id=${enc(CLIENT_ID)}&scope=${enc(SCOPE)}")
+        val conn = post("${baseUrl()}/login/device/code", "client_id=${enc(effectiveClientId())}&scope=${enc(SCOPE)}")
         try {
             val code = conn.responseCode
             if (code != HttpURLConnection.HTTP_OK) {
@@ -189,7 +229,7 @@ class AuthService {
             return DeviceCodeResponse(
                 deviceCode      = json["device_code"]?.asString      ?: error(Messages.get("auth_missing_device_code")),
                 userCode        = json["user_code"]?.asString        ?: error(Messages.get("auth_missing_user_code")),
-                verificationUri = json["verification_uri"]?.asString ?: "https://github.com/login/device",
+                verificationUri = json["verification_uri"]?.asString ?: "${baseUrl()}/login/device",
                 interval        = json["interval"]?.asInt            ?: 5,
                 expiresIn       = json["expires_in"]?.asInt          ?: 900,
             ).also {
@@ -209,10 +249,10 @@ class AuthService {
         return try {
             LOG.debug("Polling GitHub for access token")
 
-            val body = "client_id=${enc(CLIENT_ID)}" +
+            val body = "client_id=${enc(effectiveClientId())}" +
                        "&device_code=${enc(deviceCode)}" +
                        "&grant_type=${enc("urn:ietf:params:oauth:grant-type:device_code")}"
-            val conn = post(ACCESS_TOKEN_URL, body)
+            val conn = post("${baseUrl()}/login/oauth/access_token", body)
             try {
                 if (conn.responseCode != HttpURLConnection.HTTP_OK) {
                     LOG.debug("Poll returned HTTP ${conn.responseCode}")
@@ -257,7 +297,7 @@ class AuthService {
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private fun fetchUsername(token: String): String? = try {
-        val conn = (URI.create(USER_API_URL).toURL().openConnection() as HttpURLConnection).apply {
+        val conn = (URI.create("${apiBaseUrl()}/user").toURL().openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             setRequestProperty("Authorization", "Bearer $token")
             setRequestProperty("Accept",        "application/vnd.github+json")
