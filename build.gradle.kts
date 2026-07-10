@@ -55,6 +55,13 @@ intellijPlatform {
 
 tasks {
     processResources {
+        // expand() relies on Groovy's SimpleTemplateEngine, which captures
+        // non-serializable script object references, breaking the
+        // configuration cache. Opting this task out avoids build failures
+        // while still allowing the rest of the build to benefit from caching.
+        notCompatibleWithConfigurationCache(
+            "processResources uses expand(), which captures non-serializable Gradle script object references"
+        )
         filesMatching("plugin-version.properties") {
             expand("version" to pluginVersion)
         }
