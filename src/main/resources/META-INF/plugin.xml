@@ -50,26 +50,12 @@
                 <strong>Version 1.1.2</strong>
                 <br/>
                 <ul>
-                    <li>Fixed: replaced usage of the deprecated <code>SimpleListCellRenderer.create(Function)</code> API (scheduled for removal in a future release) with a non-deprecated <code>SimpleListCellRenderer</code> subclass overriding <code>customize()</code> in the GitHub deployment combo box renderer.</li>
-                </ul>
-            </p>
-
-            <p>
-                <strong>Version 1.1.1</strong>
-                <br/>
-                <ul>
-                    <li>Fixed: AI credits (remaining/total) shown in the status bar tooltip were always rounded to an integer; they are now formatted like other decimal values, keeping one decimal digit only when the value is not a whole number.</li>
-                    <li>Renamed the "GitHub Enterprise" settings group label to "Authentication Method", since the section also includes the default github.com option (not only the Enterprise Cloud/Server deployments), updated across all supported languages.</li>
-                </ul>
-            </p>
-
-            <p>
-                <strong>Version 1.1.0</strong>
-                <br/>
-                <ul>
                     <li>Added a new "Deployment" setting to choose the target GitHub server: github.com (default), GitHub Enterprise Cloud, or GitHub Enterprise Server, in Settings → Tools → GitHub Copilot Premium Quota Monitor, with an automatic re-authentication prompt when the configuration changes.</li>
-                    <li>Added support for authenticating against GitHub Enterprise Cloud (data residency): API requests are automatically routed to the `api.` subdomain of the configured tenant URL (e.g. `https://contoso.ghe.com` → `https://api.contoso.ghe.com`), using a custom OAuth Client ID.</li>
-                    <li>Added support for authenticating against a self-hosted GitHub Enterprise Server instance: configurable server URL and OAuth Client ID, with API requests routed to the `/api/v3` path.</li>
+                    <li>Added support for authenticating against GitHub Enterprise Cloud (data residency): API requests are automatically routed to the <code>api.</code> subdomain of the configured tenant URL (e.g. <code>https://contoso.ghe.com</code> → <code>https://api.contoso.ghe.com</code>), using a custom OAuth Client ID.</li>
+                    <li>Added support for authenticating against a self-hosted GitHub Enterprise Server instance: configurable server URL and OAuth Client ID, with API requests routed to the <code>/api/v3</code> path.</li>
+                    <li>Fixed: AI credits (remaining/total) shown in the status bar tooltip were always rounded to an integer; they are now formatted like other decimal values, keeping one decimal digit only when the value is not a whole number.</li>
+                    <li>Fixed: replaced usage of the deprecated <code>SimpleListCellRenderer.create(Function)</code> API (scheduled for removal in a future release) with a non-deprecated <code>SimpleListCellRenderer</code> subclass overriding <code>customize()</code> in the GitHub deployment combo box renderer.</li>
+                    <li>Renamed the "GitHub Enterprise" settings group label to "Authentication Method", since the section also includes the default github.com option (not only the Enterprise Cloud/Server deployments), updated across all supported languages.</li>
                     <li>Renamed the "Interactions" label to "AI Credits" in the status bar tooltip, updated across all supported languages (Albanian, Chinese, English, French, German, Italian, Japanese, Portuguese, Russian, Spanish, Turkish).</li>
                 </ul>
             </p>
