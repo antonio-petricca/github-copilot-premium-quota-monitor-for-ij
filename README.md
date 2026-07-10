@@ -46,6 +46,7 @@ works with IntelliJ IDEA Community and other JetBrains IDEs.
 - Manual refresh via the quick-action popup menu (single left-click).
 - Tooltip with detailed quota information and quick actions.
 - OAuth Device Flow authentication (no redirect URI required).
+- **GitHub Enterprise support**: authenticate against GitHub Enterprise Cloud (data residency) or a self-hosted GitHub Enterprise Server instance instead of github.com, by configuring a custom server URL and OAuth Client ID in the Settings panel.
 - Secure token storage using IntelliJ PasswordSafe (OS keychain / KDE Wallet / encrypted file).
 - Visual states for loading, unlimited plans, unauthenticated and error conditions.
 - **Configurable alert thresholds and colors**: set your own *critical* (default 10%) and *warning* (default 30%) quota percentage thresholds with custom colors directly from **Settings → Tools → GitHub Copilot Premium Quota Monitor**. Each setting has a dedicated "Reset to default" button.
@@ -113,6 +114,19 @@ Steps:
 
 To sign out: left-click the widget → **Sign out**.
 
+### GitHub Enterprise (Cloud with data residency, or self-hosted Server)
+
+To authenticate against a GitHub Enterprise deployment instead of github.com, open **Settings → Tools → GitHub Copilot Premium Quota Monitor** → **GitHub Enterprise** section:
+
+1. On your GitHub Enterprise Cloud tenant or Server instance, register an OAuth App (organization/enterprise → Developer settings → OAuth Apps) with **Device Flow** enabled, and note its **Client ID**.
+2. Set **Deployment** to one of:
+   - **GitHub Enterprise Cloud (data residency)** — for a Cloud tenant with a dedicated subdomain (e.g. `https://contoso.ghe.com`). The REST API is automatically resolved from the `api.` subdomain (e.g. `https://api.contoso.ghe.com`).
+   - **GitHub Enterprise Server (self-hosted)** — for a self-managed instance (e.g. `https://github.example.com`). The REST API is automatically resolved under `/api/v3` (e.g. `https://github.example.com/api/v3`).
+3. Fill in **Server URL** (the base URL of your tenant/instance) and **OAuth Client ID** (from step 1).
+4. Click **Apply** / **OK**. If you were already signed in, existing credentials are cleared automatically and you will be prompted to sign in again — left-click the widget and choose **Sign in with GitHub**.
+
+Selecting **github.com (default)** restores the standard behavior against `github.com` / `api.github.com` with the plugin's built-in Client ID.
+
 ---
 
 ## Usage
@@ -134,6 +148,9 @@ Open **Settings → Tools → GitHub Copilot Premium Quota Monitor** to configur
 | Critical color | Red `#FF0000` | Color used when quota is at or below the critical threshold. |
 | Warning threshold | 30 % | Quota percentage at or below which the status bar label turns the warning color. |
 | Warning color | Yellow `#FFFF00` | Color used when quota is at or below the warning threshold (but above critical). |
+| Deployment | github.com (default) | Choose github.com, GitHub Enterprise Cloud (data residency), or GitHub Enterprise Server (self-hosted). |
+| Server URL | *(empty)* | Base URL of the GitHub Enterprise Cloud tenant or Server instance (e.g. `https://contoso.ghe.com` or `https://github.example.com`). Required unless Deployment is github.com. |
+| OAuth Client ID | *(empty)* | Client ID of an OAuth App registered on the GitHub Enterprise Cloud tenant or Server instance with Device Flow enabled. Required unless Deployment is github.com. |
 
 Each setting has a **Reset to default** button (↩ icon). The constraint `1 < critical < warning < 100` is enforced with real-time inline validation.
 

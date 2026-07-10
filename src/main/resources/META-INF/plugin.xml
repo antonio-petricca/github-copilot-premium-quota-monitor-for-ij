@@ -20,7 +20,7 @@
               <li><b>Double-click</b> on the widget for an immediate quota refresh without opening any menu.</li>
               <li>Configurable alert thresholds and colors: set your own <b>critical</b> (default 10%) and <b>warning</b> (default 30%) quota percentage thresholds, each with a personalized color. Per-setting "Reset to default" buttons are provided for convenience.</li>
               <li>Full compatibility with all JetBrains IDEs (IntelliJ IDEA, PyCharm, WebStorm, GoLand, etc.).</li>
-              <li>GitHub Enterprise Server (GHE) support: authenticate against a self-hosted GHE instance by configuring a custom server URL and OAuth Client ID.</li>
+              <li>GitHub Enterprise support: authenticate against GitHub Enterprise Cloud (data residency) or a self-hosted GitHub Enterprise Server instance by configuring a custom server URL and OAuth Client ID.</li>
               <li>Localization support: Albanian, Chinese, English, French, German, Italian, Japanese, Portuguese, Russian, Spanish, Turkish.</li>
               <li>Manual and automatic background updates of quota data.</li>
               <li>Quick actions via widget popup (left single-click): Refresh, Sign In, Sign Out.</li>
@@ -50,7 +50,9 @@
                 <strong>Version 1.1.0</strong>
                 <br/>
                 <ul>
-                    <li>Added support for authenticating against a GitHub Enterprise Server (GHE) instance: configurable server URL and OAuth Client ID in Settings → Tools → GitHub Copilot Premium Quota Monitor, with automatic re-authentication prompt when the configuration changes.</li>
+                    <li>Added a new "Deployment" setting to choose the target GitHub server: github.com (default), GitHub Enterprise Cloud, or GitHub Enterprise Server, in Settings → Tools → GitHub Copilot Premium Quota Monitor, with an automatic re-authentication prompt when the configuration changes.</li>
+                    <li>Added support for authenticating against GitHub Enterprise Cloud (data residency): API requests are automatically routed to the `api.` subdomain of the configured tenant URL (e.g. `https://contoso.ghe.com` → `https://api.contoso.ghe.com`), using a custom OAuth Client ID.</li>
+                    <li>Added support for authenticating against a self-hosted GitHub Enterprise Server instance: configurable server URL and OAuth Client ID, with API requests routed to the `/api/v3` path.</li>
                     <li>Renamed the "Interactions" label to "AI Credits" in the status bar tooltip, updated across all supported languages (Albanian, Chinese, English, French, German, Italian, Japanese, Portuguese, Russian, Spanish, Turkish).</li>
                 </ul>
             </p>

@@ -7,6 +7,18 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
 /**
+ * The GitHub deployment a user can authenticate against.
+ */
+enum class GitHubServerType {
+    /** Public github.com (default). */
+    GITHUB_COM,
+    /** GitHub Enterprise Cloud with data residency (e.g. `https://contoso.ghe.com`). API is served from the `api.` subdomain. */
+    ENTERPRISE_CLOUD,
+    /** Self-hosted GitHub Enterprise Server (e.g. `https://github.example.com`). API is served under `/api/v3`. */
+    ENTERPRISE_SERVER,
+}
+
+/**
  * Application-level persistent settings for the GitHub Copilot Premium Quota Monitor plugin.
  *
  * Stored in `ghcp-quota-monitor-settings.xml` inside the IDE configuration directory.
@@ -24,10 +36,10 @@ class PluginSettings : PersistentStateComponent<PluginSettings.State> {
         var criticalColorRgb: Int       = DEFAULT_CRITICAL_COLOR_RGB,
         var warningThreshold: Int       = DEFAULT_WARNING_THRESHOLD,
         var warningColorRgb: Int        = DEFAULT_WARNING_COLOR_RGB,
-        // GitHub Enterprise Server (GHE) authentication
-        var useGitHubEnterprise: Boolean     = false,
-        var gitHubEnterpriseUrl: String      = "",
-        var gitHubEnterpriseClientId: String = "",
+        // GitHub Enterprise (Cloud with data residency, or self-hosted Server) authentication
+        var gitHubServerType: String          = GitHubServerType.GITHUB_COM.name,
+        var gitHubEnterpriseUrl: String       = "",
+        var gitHubEnterpriseClientId: String  = "",
     )
 
     companion object {
@@ -87,19 +99,27 @@ class PluginSettings : PersistentStateComponent<PluginSettings.State> {
         get() = myState.warningColorRgb
         set(value) { myState.warningColorRgb = value and 0xFFFFFF }
 
-    // ── GitHub Enterprise Server (GHE) ────────────────────────────────────────
+    // ── GitHub Enterprise (Cloud with data residency, or self-hosted Server) ──
 
-    /** Whether authentication and API calls should target a GitHub Enterprise Server instance. */
-    var useGitHubEnterprise: Boolean
-        get() = myState.useGitHubEnterprise
-        set(value) { myState.useGitHubEnterprise = value }
+    /** Which GitHub deployment authentication and API calls should target. */
+    var gitHubServerType: GitHubServerType
+        get() = try {
+            GitHubServerType.valueOf(myState.gitHubServerType)
+        } catch (_: IllegalArgumentException) {
+            GitHubServerType.GITHUB_COM
+        }
+        set(value) { myState.gitHubServerType = value.name }
 
-    /** Base URL of the GitHub Enterprise Server instance (e.g. `https://github.example.com`), no trailing slash. */
+    /**
+     * Base URL of the GitHub Enterprise deployment, no trailing slash. Meaning depends on
+     * [gitHubServerType]: the tenant URL (e.g. `https://contoso.ghe.com`) for [GitHubServerType.ENTERPRISE_CLOUD],
+     * or the self-hosted instance URL (e.g. `https://github.example.com`) for [GitHubServerType.ENTERPRISE_SERVER].
+     */
     var gitHubEnterpriseUrl: String
         get() = myState.gitHubEnterpriseUrl
         set(value) { myState.gitHubEnterpriseUrl = value.trim().trimEnd('/') }
 
-    /** OAuth App Client ID registered on the GitHub Enterprise Server instance (Device Flow enabled). */
+    /** OAuth App Client ID registered on the GitHub Enterprise Cloud tenant or Server instance (Device Flow enabled). */
     var gitHubEnterpriseClientId: String
         get() = myState.gitHubEnterpriseClientId
         set(value) { myState.gitHubEnterpriseClientId = value.trim() }

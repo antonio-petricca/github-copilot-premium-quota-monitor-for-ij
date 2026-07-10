@@ -52,8 +52,13 @@ All cross-component communication uses IntelliJ's MessageBus — never direct re
 ## API & Quota Parsing
 `PluginService` calls `{apiBaseUrl}/copilot_internal/user` and tries four JSON formats in order (modern → legacy → nested → flat) — see `parseQuota()`. Always returns a `QuotaResult` sealed class: `Loading | Available | Unlimited | NoAccount | Error`.
 
-## GitHub Enterprise Server (GHE) support
-`AuthService` exposes `baseUrl()`, `apiBaseUrl()` and `effectiveClientId()`, computed at call time from `PluginSettings` (`useGitHubEnterprise`, `gitHubEnterpriseUrl`, `gitHubEnterpriseClientId`). When GHE is disabled these resolve to `https://github.com` / `https://api.github.com` / the public `AuthService.CLIENT_ID`; when enabled, to `{gitHubEnterpriseUrl}` / `{gitHubEnterpriseUrl}/api/v3` / the custom Client ID. `PluginService` and the "Open Dashboard" action reuse these helpers instead of hardcoded hosts. Changing the GHE configuration in Settings clears any stored credentials (`AuthService.clearAuthentication()`) since a token is bound to a single host.
+## GitHub Enterprise support (Cloud with data residency, or self-hosted Server)
+`PluginSettings.gitHubServerType` is a `GitHubServerType` enum: `GITHUB_COM` (default) | `ENTERPRISE_CLOUD` | `ENTERPRISE_SERVER`, persisted as its `name` string. `AuthService` exposes `baseUrl()`, `apiBaseUrl()` and `effectiveClientId()`, computed at call time from `PluginSettings` (`gitHubServerType`, `gitHubEnterpriseUrl`, `gitHubEnterpriseClientId`):
+- `GITHUB_COM`: `https://github.com` / `https://api.github.com` / the public `AuthService.CLIENT_ID`.
+- `ENTERPRISE_CLOUD`: `{gitHubEnterpriseUrl}` / `https://api.{tenant-host}` (API served from the `api.` subdomain, rewritten by `apiSubdomainUrl()`) / the custom Client ID.
+- `ENTERPRISE_SERVER`: `{gitHubEnterpriseUrl}` / `{gitHubEnterpriseUrl}/api/v3` / the custom Client ID.
+
+`PluginService` and the "Open Dashboard" action reuse these helpers instead of hardcoded hosts. Changing the GHE deployment/URL/Client ID in Settings clears any stored credentials (`AuthService.clearAuthentication()`) since a token is bound to a single host.
 
 ## Conventions
 - **Services** are `@Service(Service.Level.APP)` with a `getInstance()` companion static.

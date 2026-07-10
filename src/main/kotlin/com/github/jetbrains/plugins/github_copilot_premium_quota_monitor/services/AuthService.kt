@@ -2,6 +2,7 @@ package com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.servic
 
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.PluginInfo
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.i18n.Messages
+import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.GitHubServerType
 import com.github.jetbrains.plugins.github_copilot_premium_quota_monitor.settings.PluginSettings
 import com.google.gson.JsonParser
 import com.intellij.credentialStore.CredentialAttributes
@@ -37,7 +38,7 @@ class AuthService {
          * OAuth App client ID used for the Device Flow.
          * This is the publicly documented client ID for GitHub Copilot IDE integrations.
          * Device Flow does NOT require a client secret on the client side (RFC 8628 §7).
-         * Used only when GitHub Enterprise Server authentication is not enabled (see [effectiveClientId]).
+         * Used only when GitHub Enterprise authentication is not enabled (see [effectiveClientId]).
          */
         const val CLIENT_ID = "Iv1.b507a08c87ecfe98"
 
@@ -165,43 +166,62 @@ class AuthService {
         notifyAuthStateChanged()
     }
 
-    // ── GitHub Enterprise Server (GHE) endpoints ─────────────────────────────
+    // ── GitHub Enterprise (Cloud with data residency, or self-hosted Server) endpoints ─
 
     /**
-     * Base web URL: the configured GitHub Enterprise Server instance when enabled,
+     * Base web URL: the configured GitHub Enterprise tenant/instance URL when enabled,
      * otherwise `https://github.com`. Never has a trailing slash.
      */
     fun baseUrl(): String {
         val s = PluginSettings.getInstance()
-        return if (s.useGitHubEnterprise && s.gitHubEnterpriseUrl.isNotBlank())
+        return if (s.gitHubServerType != GitHubServerType.GITHUB_COM && s.gitHubEnterpriseUrl.isNotBlank())
             s.gitHubEnterpriseUrl
         else
             DEFAULT_BASE_URL
     }
 
     /**
-     * Base REST API URL: `{baseUrl}/api/v3` for GitHub Enterprise Server,
-     * otherwise `https://api.github.com`. Never has a trailing slash.
+     * Base REST API URL, which depends on the configured deployment:
+     * - [GitHubServerType.GITHUB_COM]: `https://api.github.com`.
+     * - [GitHubServerType.ENTERPRISE_CLOUD]: `https://api.{tenant-host}` — the API is served from
+     *   the `api.` subdomain of the tenant host, e.g. `https://contoso.ghe.com` → `https://api.contoso.ghe.com`.
+     * - [GitHubServerType.ENTERPRISE_SERVER]: `{baseUrl}/api/v3` — the self-hosted REST API path.
+     *
+     * Never has a trailing slash.
      */
     fun apiBaseUrl(): String {
         val s = PluginSettings.getInstance()
-        return if (s.useGitHubEnterprise && s.gitHubEnterpriseUrl.isNotBlank())
-            "${baseUrl()}/api/v3"
-        else
-            DEFAULT_API_BASE_URL
+        if (s.gitHubEnterpriseUrl.isBlank()) return DEFAULT_API_BASE_URL
+
+        return when (s.gitHubServerType) {
+            GitHubServerType.ENTERPRISE_SERVER -> "${baseUrl()}/api/v3"
+            GitHubServerType.ENTERPRISE_CLOUD  -> apiSubdomainUrl(baseUrl()) ?: DEFAULT_API_BASE_URL
+            GitHubServerType.GITHUB_COM        -> DEFAULT_API_BASE_URL
+        }
     }
 
     /**
-     * Effective OAuth App Client ID: the custom Client ID configured for the
-     * GitHub Enterprise Server instance when enabled, otherwise the public
+     * Effective OAuth App Client ID: the custom Client ID configured for the GitHub
+     * Enterprise Cloud tenant or Server instance when enabled, otherwise the public
      * [CLIENT_ID] used for github.com.
      */
     fun effectiveClientId(): String {
         val s = PluginSettings.getInstance()
-        return if (s.useGitHubEnterprise && s.gitHubEnterpriseClientId.isNotBlank())
+        return if (s.gitHubServerType != GitHubServerType.GITHUB_COM && s.gitHubEnterpriseClientId.isNotBlank())
             s.gitHubEnterpriseClientId
         else
             CLIENT_ID
+    }
+
+    /** Rewrites `https://host[:port]` into `https://api.host[:port]`, preserving scheme and port. */
+    private fun apiSubdomainUrl(url: String): String? = try {
+        val uri    = URI.create(url)
+        val scheme = uri.scheme ?: "https"
+        val host   = uri.host ?: return null
+        val port   = if (uri.port != -1) ":${uri.port}" else ""
+        "$scheme://api.$host$port"
+    } catch (_: Exception) {
+        null
     }
 
     // ── Device Flow ───────────────────────────────────────────────────────────

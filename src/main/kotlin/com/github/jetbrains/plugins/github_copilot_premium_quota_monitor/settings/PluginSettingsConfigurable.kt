@@ -10,14 +10,13 @@ import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.Messages as UiMessages
 import com.intellij.ui.ColorPanel
-import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.SimpleListCellRenderer
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.AlignX
-import com.intellij.ui.dsl.builder.Cell
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.builder.selected
 import java.awt.Color
 import javax.swing.JButton
+import javax.swing.JComboBox
 import javax.swing.JComponent
 import javax.swing.JSpinner
 import javax.swing.SpinnerNumberModel
@@ -50,10 +49,10 @@ class PluginSettingsConfigurable : Configurable {
     private var warningSpinner: JSpinner?  = null
     private var warningColor: ColorPanel?  = null
 
-    // GitHub Enterprise Server (GHE)
-    private var gheEnabledCheckBox: JBCheckBox? = null
-    private var gheUrlField: JBTextField?        = null
-    private var gheClientIdField: JBTextField?   = null
+    // GitHub Enterprise (Cloud with data residency, or self-hosted Server)
+    private var gheTypeCombo: JComboBox<GitHubServerType>? = null
+    private var gheUrlField: JBTextField?                  = null
+    private var gheClientIdField: JBTextField?              = null
 
     /**
      * Reference to the built [DialogPanel] so that [ChangeListener]s on both
@@ -166,19 +165,26 @@ class PluginSettingsConfigurable : Configurable {
                 }.rowComment(Messages.get("settings_warning_threshold_comment"))
             }
 
-            // ── GitHub Enterprise Server section ──────────────────────────────
+            // ── GitHub Enterprise section ──────────────────────────────────────
             group(Messages.get("settings_ghe_group")) {
-                lateinit var enableCell: Cell<JBCheckBox>
-
-                row {
-                    enableCell = checkBox(Messages.get("settings_ghe_enable_label"))
-                    gheEnabledCheckBox = enableCell.component
-                }.rowComment(Messages.get("settings_ghe_enable_comment"))
+                row(Messages.get("settings_ghe_type_label")) {
+                    gheTypeCombo = comboBox(
+                        listOf(GitHubServerType.GITHUB_COM, GitHubServerType.ENTERPRISE_CLOUD, GitHubServerType.ENTERPRISE_SERVER),
+                        renderer = SimpleListCellRenderer.create("") { type ->
+                            when (type) {
+                                GitHubServerType.GITHUB_COM        -> Messages.get("settings_ghe_type_none")
+                                GitHubServerType.ENTERPRISE_CLOUD  -> Messages.get("settings_ghe_type_cloud")
+                                GitHubServerType.ENTERPRISE_SERVER -> Messages.get("settings_ghe_type_server")
+                                else                                -> ""
+                            }
+                        },
+                    ).component
+                }.rowComment(Messages.get("settings_ghe_type_comment"))
 
                 row(Messages.get("settings_ghe_url_label")) {
                     gheUrlField = textField().align(AlignX.FILL)
                         .validationOnInput { tf ->
-                            if (gheEnabledCheckBox?.isSelected == true) {
+                            if (gheTypeCombo?.selectedItem != GitHubServerType.GITHUB_COM) {
                                 val v = tf.text.trim()
                                 if (v.isBlank() || !(v.startsWith("http://") || v.startsWith("https://")))
                                     error(Messages.get("settings_ghe_url_validation_error"))
@@ -186,19 +192,29 @@ class PluginSettingsConfigurable : Configurable {
                             } else null
                         }.component
                 }.rowComment(Messages.get("settings_ghe_url_comment"))
-                 .enabledIf(enableCell.selected)
 
                 row(Messages.get("settings_ghe_client_id_label")) {
                     gheClientIdField = textField().align(AlignX.FILL)
                         .validationOnInput { tf ->
-                            if (gheEnabledCheckBox?.isSelected == true && tf.text.isBlank())
+                            if (gheTypeCombo?.selectedItem != GitHubServerType.GITHUB_COM && tf.text.isBlank())
                                 error(Messages.get("settings_ghe_client_id_validation_error"))
                             else null
                         }.component
                 }.rowComment(Messages.get("settings_ghe_client_id_comment"))
-                 .enabledIf(enableCell.selected)
             }
         }
+
+        // Enable the Server URL / OAuth Client ID fields only when a GitHub Enterprise
+        // deployment (Cloud or Server) is selected; keep them disabled for github.com.
+        // Also re-run validators so their inline error state updates immediately.
+        fun updateGheFieldsEnabled() {
+            val enabled = gheTypeCombo?.selectedItem != GitHubServerType.GITHUB_COM
+            gheUrlField?.isEnabled      = enabled
+            gheClientIdField?.isEnabled = enabled
+            SwingUtilities.invokeLater { p.validateAll() }
+        }
+        gheTypeCombo?.addItemListener { updateGheFieldsEnabled() }
+        updateGheFieldsEnabled()
 
         // When EITHER spinner changes, re-run ALL registered validators so that
         // the inline error on the OTHER spinner also clears / appears at once.
@@ -217,7 +233,7 @@ class PluginSettingsConfigurable : Configurable {
             || (criticalColor?.selectedColor?.rgb?.and(0xFFFFFF)) != s.criticalColorRgb
             || (warningSpinner?.value  as? Int) != s.warningThreshold
             || (warningColor?.selectedColor?.rgb?.and(0xFFFFFF))  != s.warningColorRgb
-            || (gheEnabledCheckBox?.isSelected ?: false)          != s.useGitHubEnterprise
+            || (gheTypeCombo?.selectedItem as? GitHubServerType ?: GitHubServerType.GITHUB_COM) != s.gitHubServerType
             || (gheUrlField?.text?.trim() ?: "")                  != s.gitHubEnterpriseUrl
             || (gheClientIdField?.text?.trim() ?: "")             != s.gitHubEnterpriseClientId
     }
@@ -236,7 +252,8 @@ class PluginSettingsConfigurable : Configurable {
             )
         }
 
-        val gheEnabled  = gheEnabledCheckBox?.isSelected ?: false
+        val gheType     = (gheTypeCombo?.selectedItem as? GitHubServerType) ?: GitHubServerType.GITHUB_COM
+        val gheEnabled  = gheType != GitHubServerType.GITHUB_COM
         val gheUrl      = gheUrlField?.text?.trim() ?: ""
         val gheClientId = gheClientIdField?.text?.trim() ?: ""
 
@@ -258,11 +275,11 @@ class PluginSettingsConfigurable : Configurable {
         val s = PluginSettings.getInstance()
 
         LOG.info("Applying settings: refreshInterval=${(refreshSpinner?.value as? Int)}, " +
-                 "critical=$critical, warning=$warning, gheEnabled=$gheEnabled")
+                 "critical=$critical, warning=$warning, gheType=$gheType")
 
-        // Detect whether the GHE server configuration actually changed, so we can
+        // Detect whether the GHE configuration actually changed, so we can
         // force a re-authentication (an existing token is bound to a single host).
-        val gheConfigChanged = gheEnabled != s.useGitHubEnterprise
+        val gheConfigChanged = gheType != s.gitHubServerType
             || gheUrl != s.gitHubEnterpriseUrl
             || gheClientId != s.gitHubEnterpriseClientId
 
@@ -273,12 +290,12 @@ class PluginSettingsConfigurable : Configurable {
         s.warningThreshold       = warning
         s.warningColorRgb        = warningColor?.selectedColor?.rgb?.and(0xFFFFFF)
                                    ?: PluginSettings.DEFAULT_WARNING_COLOR_RGB
-        s.useGitHubEnterprise        = gheEnabled
+        s.gitHubServerType           = gheType
         s.gitHubEnterpriseUrl        = gheUrl
         s.gitHubEnterpriseClientId   = gheClientId
 
         if (gheConfigChanged && AuthService.getInstance().isAuthenticatedCached()) {
-            LOG.info("GitHub Enterprise Server configuration changed — clearing existing authentication")
+            LOG.info("GitHub Enterprise configuration changed — clearing existing authentication")
 
             AuthService.getInstance().clearAuthentication()
             UiMessages.showInfoMessage(
@@ -302,9 +319,9 @@ class PluginSettingsConfigurable : Configurable {
         warningSpinner?.value  = s.warningThreshold
         @Suppress("UseJBColor")
         warningColor?.selectedColor  = Color(s.warningColorRgb)
-        gheEnabledCheckBox?.isSelected = s.useGitHubEnterprise
-        gheUrlField?.text              = s.gitHubEnterpriseUrl
-        gheClientIdField?.text         = s.gitHubEnterpriseClientId
+        gheTypeCombo?.selectedItem      = s.gitHubServerType
+        gheUrlField?.text               = s.gitHubEnterpriseUrl
+        gheClientIdField?.text          = s.gitHubEnterpriseClientId
     }
 
     override fun disposeUIResources() {
@@ -313,9 +330,9 @@ class PluginSettingsConfigurable : Configurable {
         criticalColor   = null
         warningSpinner  = null
         warningColor    = null
-        gheEnabledCheckBox = null
-        gheUrlField        = null
-        gheClientIdField   = null
+        gheTypeCombo     = null
+        gheUrlField      = null
+        gheClientIdField = null
         dialogPanel     = null
     }
 }
